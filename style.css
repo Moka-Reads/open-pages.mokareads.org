@@ -7,19 +7,13 @@
     --text-muted: #8b949e;
     --btn-gradient: linear-gradient(90deg, #58a6ff, #00c6ff);
 }
+
 body {
     font-family: "Fira Code", monospace;
     background: radial-gradient(circle at top, #0a0f1a 0%, #000 100%);
     margin: 0;
     padding: 0;
     color: var(--text-light);
-}
-
-footer {
-    position: absolute;
-    bottom: 0;
-    text-align: center;
-    width: 100%;
 }
 
 header {
@@ -30,6 +24,7 @@ header {
     letter-spacing: 1px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
+
 #searchBar {
     width: 60%;
     padding: 0.8rem 2.5rem;
@@ -48,6 +43,7 @@ header {
 #searchBar:focus {
     box-shadow: 0 0 0 2px var(--accent);
 }
+
 .paper-list {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -56,6 +52,7 @@ header {
     margin: auto;
     padding: 2rem;
 }
+
 .paper-card {
     background: var(--card-bg);
     backdrop-filter: blur(12px);
@@ -67,23 +64,28 @@ header {
         transform 0.3s ease,
         border-color 0.3s ease;
 }
+
 .paper-card:hover {
     transform: translateY(-5px);
     border-color: var(--accent);
 }
+
 .paper-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
+
 .paper-title {
     font-family: "Merriweather", serif;
     font-size: 1.2rem;
     color: var(--accent);
 }
+
 .tags {
     margin: 0.8rem 0;
 }
+
 .tag {
     display: inline-block;
     background: var(--accent-soft);
@@ -93,6 +95,7 @@ header {
     font-size: 0.8rem;
     margin-right: 0.4rem;
 }
+
 .status {
     font-size: 0.75rem;
     padding: 0.25rem 0.5rem;
@@ -100,6 +103,7 @@ header {
     text-transform: uppercase;
     font-weight: bold;
 }
+
 .status.working {
     background: rgba(255, 193, 7, 0.15);
     color: #ffc107;
@@ -136,6 +140,7 @@ header {
     margin-top: 0.8rem;
     display: flex;
     gap: 0.5rem;
+    flex-wrap: wrap;
 }
 .link-btn {
     background: var(--accent-soft);
@@ -212,4 +217,51 @@ header {
     padding: 0.3rem 0;
     color: var(--accent);
     cursor: pointer;
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    width: 100%;
+    padding: 1rem 0;
+    background: rgba(20, 26, 40, 0.85);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    #searchBar {
+        width: 90%;
+        padding: 0.6rem 1.5rem;
+        font-size: 0.95rem;
+    }
+
+    .paper-list {
+        grid-template-columns: 1fr;
+        padding: 1rem;
+        gap: 1rem;
+    }
+
+    .paper-title {
+        font-size: 1rem;
+    }
+
+    .read-full {
+        width: 100%;
+        text-align: center;
+    }
+
+    .link-buttons {
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+
+    .full-title {
+        font-size: 1.5rem;
+    }
+
+    .section-title {
+        font-size: 1rem;
+    }
 }
