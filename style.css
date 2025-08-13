@@ -1,0 +1,215 @@
+:root {
+    --bg: #0a0f1a;
+    --card-bg: rgba(20, 26, 40, 0.75);
+    --accent: #58a6ff;
+    --accent-soft: rgba(88, 166, 255, 0.15);
+    --text-light: #d0d7de;
+    --text-muted: #8b949e;
+    --btn-gradient: linear-gradient(90deg, #58a6ff, #00c6ff);
+}
+body {
+    font-family: "Fira Code", monospace;
+    background: radial-gradient(circle at top, #0a0f1a 0%, #000 100%);
+    margin: 0;
+    padding: 0;
+    color: var(--text-light);
+}
+
+footer {
+    position: absolute;
+    bottom: 0;
+    text-align: center;
+    width: 100%;
+}
+
+header {
+    text-align: center;
+    padding: 2rem;
+    font-size: 1.8rem;
+    font-family: "Merriweather", serif;
+    letter-spacing: 1px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+#searchBar {
+    width: 60%;
+    padding: 0.8rem 2.5rem;
+    font-size: 1rem;
+    border-radius: 12px;
+    border: none;
+    background: var(--card-bg);
+    color: var(--text-light);
+    backdrop-filter: blur(10px);
+    display: block;
+    margin: 1.5rem auto;
+    outline: none;
+    box-shadow: 0 0 0 2px transparent;
+    transition: box-shadow 0.3s ease;
+}
+#searchBar:focus {
+    box-shadow: 0 0 0 2px var(--accent);
+}
+.paper-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+    max-width: 1200px;
+    margin: auto;
+    padding: 2rem;
+}
+.paper-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    padding: 1.5rem;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    transition:
+        transform 0.3s ease,
+        border-color 0.3s ease;
+}
+.paper-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--accent);
+}
+.paper-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.paper-title {
+    font-family: "Merriweather", serif;
+    font-size: 1.2rem;
+    color: var(--accent);
+}
+.tags {
+    margin: 0.8rem 0;
+}
+.tag {
+    display: inline-block;
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    margin-right: 0.4rem;
+}
+.status {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+.status.working {
+    background: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+}
+.status.idea {
+    background: rgba(0, 255, 128, 0.15);
+    color: #00ff80;
+}
+.status.completed {
+    background: rgba(0, 255, 255, 0.15);
+    color: #00ffff;
+}
+
+/* Expand summary */
+.summary {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    max-height: 0;
+    overflow: hidden;
+    transition:
+        max-height 0.4s ease,
+        opacity 0.3s ease;
+    opacity: 0;
+    margin-top: 0.3rem;
+}
+.summary.open {
+    max-height: 300px;
+    opacity: 1;
+    margin-top: 0.6rem;
+}
+
+/* Buttons inside card */
+.link-buttons {
+    margin-top: 0.8rem;
+    display: flex;
+    gap: 0.5rem;
+}
+.link-btn {
+    background: var(--accent-soft);
+    padding: 0.4rem 0.6rem;
+    border-radius: 6px;
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    transition: background 0.3s ease;
+}
+.link-btn:hover {
+    background: var(--accent);
+    color: #000;
+}
+
+/* Big read full button */
+.read-full {
+    margin-top: 1rem;
+    display: inline-block;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.95rem;
+    font-weight: bold;
+    color: #fff;
+    border-radius: 8px;
+    background: var(--btn-gradient);
+    text-decoration: none;
+    transition: opacity 0.3s ease;
+}
+.read-full:hover {
+    opacity: 0.85;
+}
+
+/* Full view */
+.full-view {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    padding: 2rem;
+    overflow-y: auto;
+    z-index: 999;
+    max-width: 900px;
+    margin: auto;
+}
+.close-btn {
+    background: #da3633;
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    margin-bottom: 1rem;
+}
+.full-title {
+    font-family: "Merriweather", serif;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+.section-title {
+    font-family: "Merriweather", serif;
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0.3rem;
+}
+.toc ul {
+    list-style: none;
+    padding: 0;
+}
+.toc ul li {
+    padding: 0.3rem 0;
+    color: var(--accent);
+    cursor: pointer;
+}

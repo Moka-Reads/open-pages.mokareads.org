@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Open Pages</title>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Merriweather:wght@400;700&display=swap"
+            rel="stylesheet"
+        />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        />
+        <link rel="stylesheet" href="style.css" />
+    </head>
+    <body>
+        <header>📖 Open Pages 📖</header>
+        <input
+            type="text"
+            id="searchBar"
+            placeholder="🔍 Search by title, topic, or tag..."
+        />
+
+        <div class="paper-list" id="paperList"></div>
+
+        <div class="full-view" id="fullView">
+            <button class="close-btn" onclick="closeFullView()">Close</button>
+            <h1 class="full-title" id="fullTitle"></h1>
+            <div>
+                <div class="section-title">Abstract</div>
+                <p id="fullAbstract"></p>
+            </div>
+            <div>
+                <div class="section-title">Table of Contents</div>
+                <div class="toc" id="fullTOC"></div>
+            </div>
+        </div>
+
+        <script>
+            async function loadPapers() {
+                try {
+                    const res = await fetch("papers.json");
+                    const papers = await res.json();
+                    const paperList = document.getElementById("paperList");
+                    paperList.innerHTML = "";
+
+                    papers.forEach((paper) => {
+                        const card = document.createElement("div");
+                        card.className = "paper-card";
+                        card.innerHTML = `
+                <div class="paper-header">
+                    <div class="paper-title" onclick="toggleSummary(this)">${paper.title}</div>
+                    <span class="status ${paper.status}">${statusLabel(paper.status)}</span>
+                </div>
+                <div class="tags">
+                    ${paper.tags.map((tag) => `<span class="tag">${tag}</span>`).join("")}
+                </div>
+                <div class="summary">${paper.summary}</div>
+                <div class="link-buttons">
+                    <a class="link-btn" href="${paper.github}" target="_blank"><i class="fab fa-github"></i> GitHub</a>
+                    <a class="link-btn" href="${paper.pdf}" target="_blank"><i class="fas fa-file-pdf"></i> PDF</a>
+                    <a class="link-btn" href="${paper.purchase}" target="_blank"><i class="fas fa-shopping-cart"></i> Purchase</a>
+                </div>
+                <a href="#" class="read-full" onclick='openFullView(${JSON.stringify(paper.title)}, ${JSON.stringify(paper.abstract)}, ${JSON.stringify(paper.toc)}); return false;'>
+                    📖 Expand Details
+                </a>
+            `;
+                        paperList.appendChild(card);
+                    });
+                } catch (err) {
+                    console.error("Failed to load papers.json", err);
+                }
+            }
+
+            function statusLabel(status) {
+                if (status === "working") return "Working On";
+                if (status === "idea") return "Idea";
+                if (status === "completed") return "Completed";
+                return "";
+            }
+
+            function toggleSummary(titleElem) {
+                const summary =
+                    titleElem.parentElement.parentElement.querySelector(
+                        ".summary",
+                    );
+                summary.classList.toggle("open");
+            }
+
+            function openFullView(title, abstract, tocItems) {
+                document.getElementById("fullTitle").innerText = title;
+                document.getElementById("fullAbstract").innerText = abstract;
+                const toc = document.getElementById("fullTOC");
+                toc.innerHTML =
+                    "<ul>" +
+                    tocItems.map((item) => `<li>${item}</li>`).join("") +
+                    "</ul>";
+                document.getElementById("fullView").style.display = "block";
+            }
+
+            function closeFullView() {
+                document.getElementById("fullView").style.display = "none";
+            }
+
+            document
+                .getElementById("searchBar")
+                .addEventListener("input", function () {
+                    const query = this.value.toLowerCase();
+                    document.querySelectorAll(".paper-card").forEach((card) => {
+                        const text = card.innerText.toLowerCase();
+                        card.style.display = text.includes(query)
+                            ? "block"
+                            : "none";
+                    });
+                });
+
+            loadPapers();
+        </script>
+    </body>
+
+    <footer
+        style="
+            text-align: center;
+            padding: 2rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        "
+    >
+        Open Pages is an initiative by
+        <a
+            href="https://moka-reads.org"
+            target="_blank"
+            style="color: var(--accent); text-decoration: none"
+            >MoKa Reads</a
+        >.
+    </footer>
+</html>
