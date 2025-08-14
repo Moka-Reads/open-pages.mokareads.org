@@ -185,7 +185,7 @@ header {
     padding: 2rem;
     overflow-y: auto;
     z-index: 999;
-    max-width: 900px;
+    max-width: 100%;
     margin: auto;
 }
 .close-btn {
@@ -227,6 +227,8 @@ footer {
     background: rgba(20, 26, 40, 0.85);
     color: var(--text-muted);
     font-size: 0.85rem;
+    bottom: 0;
+    position: absolute;
 }
 
 /* Mobile responsive */
