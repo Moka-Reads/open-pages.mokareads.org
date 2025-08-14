@@ -13,6 +13,10 @@
             href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
         />
         <link rel="stylesheet" href="style.css" id="theme-stylesheet" />
+        <!-- Marked.js for Markdown parsing -->
+        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+        <!-- JS-YAML for parsing frontmatter -->
+        <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
     </head>
     <body>
         <!-- Theme Selector -->
@@ -39,14 +43,7 @@
         <div class="full-view" id="fullView">
             <button class="close-btn" onclick="closeFullView()">Close</button>
             <h1 class="full-title" id="fullTitle"></h1>
-            <div>
-                <div class="section-title">Abstract</div>
-                <p id="fullAbstract"></p>
-            </div>
-            <div>
-                <div class="section-title">Table of Contents</div>
-                <div class="toc" id="fullTOC"></div>
-            </div>
+            <div id="fullContent"></div>
         </div>
 
         <script>
@@ -81,39 +78,158 @@
                 }
             }
 
+            // Parse frontmatter from markdown
+            function parseFrontmatter(content) {
+                const frontmatterRegex =
+                    /^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/;
+                const match = content.match(frontmatterRegex);
+
+                if (match) {
+                    try {
+                        const metadata = jsyaml.load(match[1]);
+                        const markdown = match[2];
+                        return { metadata, markdown };
+                    } catch (e) {
+                        console.error("Error parsing frontmatter:", e);
+                        return { metadata: {}, markdown: content };
+                    }
+                }
+                return { metadata: {}, markdown: content };
+            }
+
+            // Parse markdown sections
+            function parseMarkdownSections(markdown) {
+                const sections = {};
+                const lines = markdown.split("\n");
+                let currentSection = null;
+                let currentContent = [];
+
+                for (const line of lines) {
+                    if (line.startsWith("## ")) {
+                        if (currentSection) {
+                            sections[currentSection] = currentContent
+                                .join("\n")
+                                .trim();
+                        }
+                        currentSection = line.substring(3).toLowerCase();
+                        currentContent = [];
+                    } else if (currentSection) {
+                        currentContent.push(line);
+                    }
+                }
+
+                if (currentSection) {
+                    sections[currentSection] = currentContent.join("\n").trim();
+                }
+
+                return sections;
+            }
+
+            // Extract TOC from markdown
+            function extractTOC(markdown) {
+                const tocSection = markdown.match(
+                    /## Table of Contents[\s\S]*?(?=\n## |$)/,
+                );
+                if (!tocSection) return [];
+
+                const tocItems = [];
+                const lines = tocSection[0].split("\n");
+
+                for (const line of lines) {
+                    // Match numbered items with bold text
+                    const match = line.match(/^\d+\.\s+\*\*(.*?)\*\*/);
+                    if (match) {
+                        tocItems.push(match[1]);
+                    }
+                }
+
+                return tocItems;
+            }
+
+            let papersData = [];
+
             async function loadPapers() {
                 try {
-                    const res = await fetch("papers.json");
-                    const papers = await res.json();
-                    const paperList = document.getElementById("paperList");
-                    paperList.innerHTML = "";
+                    const papers = [];
 
-                    papers.forEach((paper) => {
-                        const card = document.createElement("div");
-                        card.className = "paper-card";
-                        card.innerHTML = `
-                <div class="paper-header">
-                    <div class="paper-title" onclick="toggleSummary(this)">${paper.title}</div>
-                    <span class="status ${paper.status}">${statusLabel(paper.status)}</span>
-                </div>
-                <div class="tags">
-                    ${paper.tags.map((tag) => `<span class="tag">${tag}</span>`).join("")}
-                </div>
-                <div class="summary">${paper.summary}</div>
-                <div class="link-buttons">
-                    <a class="link-btn" href="${paper.github}" target="_blank"><i class="fab fa-github"></i> GitHub</a>
-                    <a class="link-btn" href="${paper.pdf}" target="_blank"><i class="fas fa-file-pdf"></i> PDF</a>
-                    <a class="link-btn" href="${paper.purchase}" target="_blank"><i class="fas fa-shopping-cart"></i> Purchase</a>
-                </div>
-                <a href="#" class="read-full" onclick='openFullView(${JSON.stringify(paper.title)}, ${JSON.stringify(paper.abstract)}, ${JSON.stringify(paper.toc)}); return false;'>
-                    📖 Expand Details
-                </a>
-            `;
-                        paperList.appendChild(card);
-                    });
+                    // Load the list of paper files from papers-list.json
+                    let paperFiles = [];
+                    try {
+                        const listResponse = await fetch(
+                            "papers/papers-list.json",
+                        );
+                        if (listResponse.ok) {
+                            paperFiles = await listResponse.json();
+                            console.log(
+                                `Loaded ${paperFiles.length} papers from papers-list.json`,
+                            );
+                        }
+                    } catch (err) {
+                        console.error("Failed to load papers-list.json:", err);
+                    }
+
+                    for (const file of paperFiles) {
+                        try {
+                            const response = await fetch(`papers/${file}`);
+                            if (response.ok) {
+                                const content = await response.text();
+                                const { metadata, markdown } =
+                                    parseFrontmatter(content);
+                                const sections =
+                                    parseMarkdownSections(markdown);
+                                const toc = extractTOC(markdown);
+
+                                papers.push({
+                                    ...metadata,
+                                    filename: file,
+                                    summary: sections.summary || "",
+                                    abstract: sections.abstract || "",
+                                    toc:
+                                        toc.length > 0
+                                            ? toc
+                                            : metadata.toc || [],
+                                    fullMarkdown: markdown,
+                                });
+                            }
+                        } catch (err) {
+                            console.error(`Failed to load ${file}:`, err);
+                        }
+                    }
+
+                    papersData = papers;
+                    renderPapers(papersData);
                 } catch (err) {
-                    console.error("Failed to load papers.json", err);
+                    console.error("Failed to load papers:", err);
                 }
+            }
+
+            function renderPapers(papers) {
+                const paperList = document.getElementById("paperList");
+                paperList.innerHTML = "";
+
+                papers.forEach((paper, index) => {
+                    const card = document.createElement("div");
+                    card.className = "paper-card";
+                    card.innerHTML = `
+                        <div class="paper-header">
+                            <div class="paper-title" onclick="toggleSummary(this)">${paper.title}</div>
+                            <span class="status ${paper.status}">${statusLabel(paper.status)}</span>
+                        </div>
+                        <div class="tags">
+                            ${(paper.tags || []).map((tag) => `<span class="tag">${tag}</span>`).join("")}
+                        </div>
+                        <div class="summary">${paper.summary}</div>
+                        <div class="link-buttons">
+                            <a class="link-btn" href="${paper.github}" target="_blank"><i class="fab fa-github"></i> GitHub</a>
+                            <a class="link-btn" href="${paper.pdf}" target="_blank"><i class="fas fa-file-pdf"></i> PDF</a>
+                            <a class="link-btn" href="${paper.purchase}" target="_blank"><i class="fas fa-shopping-cart"></i> Purchase</a>
+                        </div>
+                        <a href="#" class="read-full" onclick='openFullView(${index}); return false;'>
+                            📖 Expand Details
+                        </a>
+                    `;
+                    paperList.appendChild(card);
+                });
             }
 
             function statusLabel(status) {
@@ -131,14 +247,34 @@
                 summary.classList.toggle("open");
             }
 
-            function openFullView(title, abstract, tocItems) {
-                document.getElementById("fullTitle").innerText = title;
-                document.getElementById("fullAbstract").innerText = abstract;
-                const toc = document.getElementById("fullTOC");
-                toc.innerHTML =
-                    "<ul>" +
-                    tocItems.map((item) => `<li>${item}</li>`).join("") +
-                    "</ul>";
+            function openFullView(index) {
+                const paper = papersData[index];
+                document.getElementById("fullTitle").innerText = paper.title;
+
+                const contentDiv = document.getElementById("fullContent");
+
+                if (paper.fullMarkdown) {
+                    // Parse and render markdown content
+                    const htmlContent = marked.parse(paper.fullMarkdown);
+                    contentDiv.innerHTML = htmlContent;
+                } else {
+                    // Fallback to old format
+                    contentDiv.innerHTML = `
+                        <div>
+                            <div class="section-title">Abstract</div>
+                            <p>${paper.abstract || "N/A"}</p>
+                        </div>
+                        <div>
+                            <div class="section-title">Table of Contents</div>
+                            <div class="toc">
+                                <ul>
+                                    ${(paper.toc || []).map((item) => `<li>${item}</li>`).join("")}
+                                </ul>
+                            </div>
+                        </div>
+                    `;
+                }
+
                 document.getElementById("fullView").style.display = "block";
             }
 
@@ -175,11 +311,6 @@
         "
     >
         Open Pages is an initiative by
-        <a
-            href="https://moka-reads.org"
-            target="_blank"
-            style="color: var(--accent); text-decoration: none"
-            >MoKa Reads</a
-        >.
+        <a href="https://moka-reads.org" target="_blank">MoKa Reads</a>.
     </footer>
 </html>
