@@ -12,9 +12,21 @@
             rel="stylesheet"
             href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
         />
-        <link rel="stylesheet" href="style.css" />
+        <link rel="stylesheet" href="style.css" id="theme-stylesheet" />
     </head>
     <body>
+        <!-- Theme Selector -->
+        <div class="theme-selector">
+            <label for="themeSelect">
+                <i class="fas fa-palette"></i>
+                Theme:
+            </label>
+            <select id="themeSelect">
+                <option value="default">Default</option>
+                <option value="moka">Moka</option>
+            </select>
+        </div>
+
         <header>📖 Open Pages 📖</header>
         <input
             type="text"
@@ -38,6 +50,37 @@
         </div>
 
         <script>
+            // Theme Management
+            const themeSelect = document.getElementById("themeSelect");
+            const themeStylesheet = document.getElementById("theme-stylesheet");
+
+            // Load saved theme or default to 'current'
+            const savedTheme =
+                localStorage.getItem("selectedTheme") || "current";
+            themeSelect.value = savedTheme;
+            applyTheme(savedTheme);
+
+            // Theme change handler
+            themeSelect.addEventListener("change", (e) => {
+                const selectedTheme = e.target.value;
+                applyTheme(selectedTheme);
+                localStorage.setItem("selectedTheme", selectedTheme);
+            });
+
+            function applyTheme(theme) {
+                const link = document.getElementById("theme-stylesheet");
+                if (link) {
+                    switch (theme) {
+                        case "default":
+                            link.href = "theme-default.css";
+                            break;
+                        case "moka":
+                            link.href = "theme-moka.css";
+                            break;
+                    }
+                }
+            }
+
             async function loadPapers() {
                 try {
                     const res = await fetch("papers.json");
@@ -126,6 +169,9 @@
             font-size: 0.9rem;
             color: var(--text-muted);
             border-top: 1px solid rgba(255, 255, 255, 0.05);
+            bottom: 0;
+            position: absolute;
+            width: 100%;
         "
     >
         Open Pages is an initiative by
