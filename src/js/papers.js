@@ -344,6 +344,22 @@ class PapersManager {
         ? `<div class="paper-date">Updated: ${new Date(paper.lastUpdated).toLocaleDateString()}</div>`
         : "";
 
+      // Only show links if they're not empty and not "#" placeholders
+      const githubBtn =
+        paper.github && paper.github !== "#"
+          ? `<a href="${paper.github}" class="action-link" target="_blank"><i class="fab fa-github"></i> GitHub</a>`
+          : "";
+
+      const pdfBtn =
+        paper.pdf && paper.pdf !== "#"
+          ? `<a href="${paper.pdf}" class="action-link" target="_blank"><i class="fas fa-file-pdf"></i> PDF</a>`
+          : "";
+
+      const purchaseBtn =
+        paper.purchase && paper.purchase !== "#"
+          ? `<a href="${paper.purchase}" class="action-link" target="_blank"><i class="fas fa-shopping-cart"></i> Purchase</a>`
+          : "";
+
       return `
         <div class="paper-card">
           <div class="paper-header">
@@ -357,9 +373,9 @@ class PapersManager {
           </div>
           <div class="paper-summary">${summary}</div>
           <div class="paper-actions">
-            ${paper.github ? `<a href="${paper.github}" class="action-link" target="_blank"><i class="fab fa-github"></i> GitHub</a>` : ""}
-            ${paper.pdf ? `<a href="${paper.pdf}" class="action-link" target="_blank"><i class="fas fa-file-pdf"></i> PDF</a>` : ""}
-            ${paper.purchase ? `<a href="${paper.purchase}" class="action-link" target="_blank"><i class="fas fa-shopping-cart"></i> Purchase</a>` : ""}
+            ${githubBtn}
+            ${pdfBtn}
+            ${purchaseBtn}
             <button class="expand-btn" data-slug="${paper.slug}">Read More</button>
           </div>
         </div>
@@ -445,9 +461,9 @@ class PapersManager {
             </div>
           </div>
           <div class="paper-detail-links">
-            ${paper.github ? `<a href="${paper.github}" class="detail-link" target="_blank"><i class="fab fa-github"></i> GitHub</a>` : ""}
-            ${paper.pdf ? `<a href="${paper.pdf}" class="detail-link" target="_blank"><i class="fas fa-file-pdf"></i> PDF</a>` : ""}
-            ${paper.purchase ? `<a href="${paper.purchase}" class="detail-link" target="_blank"><i class="fas fa-shopping-cart"></i> Purchase</a>` : ""}
+            ${paper.github && paper.github !== "#" ? `<a href="${paper.github}" class="detail-link" target="_blank"><i class="fab fa-github"></i> GitHub</a>` : ""}
+            ${paper.pdf && paper.pdf !== "#" ? `<a href="${paper.pdf}" class="detail-link" target="_blank"><i class="fas fa-file-pdf"></i> PDF</a>` : ""}
+            ${paper.purchase && paper.purchase !== "#" ? `<a href="${paper.purchase}" class="detail-link" target="_blank"><i class="fas fa-shopping-cart"></i> Purchase</a>` : ""}
           </div>
           <div class="paper-detail-content">
             ${paper.html || "No content available"}

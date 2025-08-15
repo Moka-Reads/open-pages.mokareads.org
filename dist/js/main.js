@@ -3,7 +3,7 @@
  * Initializes the Open Pages application
  */
 
-// papersManager is loaded from papers.js via script tag
+
 
 // Detect if we're in production mode (GitHub Pages)
 const isProduction =
