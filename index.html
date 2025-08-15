@@ -3,314 +3,161 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Open Pages</title>
+        <meta
+            name="description"
+            content="Open Pages - Accessible academic research papers and publications by MoKa Reads, promoting open knowledge and collaboration"
+        />
+        <title>Open Pages | Academic Research Repository | MoKa Reads</title>
+
+        <!-- Fonts -->
         <link
             href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Merriweather:wght@400;700&display=swap"
             rel="stylesheet"
         />
+
+        <!-- Font Awesome Icons -->
         <link
             rel="stylesheet"
             href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
         />
-        <link rel="stylesheet" href="style.css" id="theme-stylesheet" />
-        <!-- Marked.js for Markdown parsing -->
-        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-        <!-- JS-YAML for parsing frontmatter -->
-        <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+
+        <!-- Stylesheets -->
+        <link rel="stylesheet" href="dist/css/style.css" />
+        <link
+            rel="stylesheet"
+            href="dist/css/theme-default.css"
+            id="theme-stylesheet"
+        />
+
+        <!-- For progressive enhancement, add a basic loading state -->
+        <style>
+            body.loading {
+                cursor: wait;
+            }
+            .loading-indicator {
+                display: none;
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                text-align: center;
+                z-index: 9999;
+            }
+            body.loading .loading-indicator {
+                display: block;
+            }
+        </style>
     </head>
-    <body>
+    <body class="loading">
+        <!-- Loading Indicator -->
+        <div class="loading-indicator">
+            <i class="fas fa-spinner fa-spin fa-3x"></i>
+            <p>Loading papers...</p>
+        </div>
+
         <!-- Theme Selector -->
         <div class="theme-selector">
-            <label for="themeSelect">
+            <label for="theme-select">
                 <i class="fas fa-palette"></i>
-                Theme:
+                <span>Theme:</span>
             </label>
-            <select id="themeSelect">
+            <select id="theme-select">
                 <option value="default">Default</option>
-                <option value="moka">Moka</option>
+                <option value="maple">Maple</option>
             </select>
         </div>
 
-        <header>📖 Open Pages 📖</header>
-        <input
-            type="text"
-            id="searchBar"
-            placeholder="🔍 Search by title, topic, or tag..."
-        />
+        <!-- Header -->
+        <header>
+            <h1>📖 Open Pages 📖</h1>
+            <p>
+                Accessible academic research, promoting open knowledge and
+                accelerating progress through collaboration
+            </p>
+        </header>
 
-        <div class="paper-list" id="paperList"></div>
+        <!-- Main Content -->
+        <main class="container">
+            <!-- Search and Filters -->
+            <div class="filters-container">
+                <div class="search-container">
+                    <i class="fas fa-search"></i>
+                    <input
+                        type="text"
+                        id="search-input"
+                        class="search-input"
+                        placeholder="Search by title, topic, or tag..."
+                    />
+                </div>
 
-        <div class="full-view" id="fullView">
-            <button class="close-btn" onclick="closeFullView()">Close</button>
-            <h1 class="full-title" id="fullTitle"></h1>
-            <div id="fullContent"></div>
+                <select id="category-filter" class="filter-select">
+                    <option value="">All Categories</option>
+                    <!-- Categories will be added by JavaScript -->
+                </select>
+
+                <select id="status-filter" class="filter-select">
+                    <option value="">All Statuses</option>
+                    <option value="working">Working On</option>
+                    <option value="idea">Idea</option>
+                    <option value="completed">Completed</option>
+                </select>
+
+                <select id="sort-order" class="filter-select">
+                    <option value="title-asc">Title (A-Z)</option>
+                    <option value="title-desc">Title (Z-A)</option>
+                    <option value="date-desc">Newest First</option>
+                    <option value="date-asc">Oldest First</option>
+                </select>
+            </div>
+
+            <!-- Paper List -->
+            <div id="paper-list" class="paper-list">
+                <!-- Papers will be added by JavaScript -->
+            </div>
+        </main>
+
+        <!-- Paper Details Modal -->
+        <div id="paper-modal" class="modal">
+            <div class="modal-content">
+                <button class="close-modal">&times; Close</button>
+                <div id="modal-content">
+                    <!-- Paper details will be added by JavaScript -->
+                </div>
+            </div>
         </div>
 
+        <!-- Footer -->
+        <footer>
+            <p>
+                Open Pages is an initiative by
+                <a href="https://moka-reads.org" target="_blank">MoKa Reads</a>
+            </p>
+        </footer>
+
+        <!-- Scripts -->
+        <!-- Required for markdown parsing -->
+        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+
+        <!-- Main application scripts -->
+        <script src="dist/js/papers.js"></script>
+        <script src="dist/js/main.js"></script>
         <script>
-            // Theme Management
-            const themeSelect = document.getElementById("themeSelect");
-            const themeStylesheet = document.getElementById("theme-stylesheet");
-
-            // Load saved theme or default to 'current'
-            const savedTheme =
-                localStorage.getItem("selectedTheme") || "current";
-            themeSelect.value = savedTheme;
-            applyTheme(savedTheme);
-
-            // Theme change handler
-            themeSelect.addEventListener("change", (e) => {
-                const selectedTheme = e.target.value;
-                applyTheme(selectedTheme);
-                localStorage.setItem("selectedTheme", selectedTheme);
-            });
-
-            function applyTheme(theme) {
-                const link = document.getElementById("theme-stylesheet");
-                if (link) {
-                    switch (theme) {
-                        case "default":
-                            link.href = "theme-default.css";
-                            break;
-                        case "moka":
-                            link.href = "theme-moka.css";
-                            break;
-                    }
-                }
-            }
-
-            // Parse frontmatter from markdown
-            function parseFrontmatter(content) {
-                const frontmatterRegex =
-                    /^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/;
-                const match = content.match(frontmatterRegex);
-
-                if (match) {
-                    try {
-                        const metadata = jsyaml.load(match[1]);
-                        const markdown = match[2];
-                        return { metadata, markdown };
-                    } catch (e) {
-                        console.error("Error parsing frontmatter:", e);
-                        return { metadata: {}, markdown: content };
-                    }
-                }
-                return { metadata: {}, markdown: content };
-            }
-
-            // Parse markdown sections
-            function parseMarkdownSections(markdown) {
-                const sections = {};
-                const lines = markdown.split("\n");
-                let currentSection = null;
-                let currentContent = [];
-
-                for (const line of lines) {
-                    if (line.startsWith("## ")) {
-                        if (currentSection) {
-                            sections[currentSection] = currentContent
-                                .join("\n")
-                                .trim();
-                        }
-                        currentSection = line.substring(3).toLowerCase();
-                        currentContent = [];
-                    } else if (currentSection) {
-                        currentContent.push(line);
-                    }
-                }
-
-                if (currentSection) {
-                    sections[currentSection] = currentContent.join("\n").trim();
-                }
-
-                return sections;
-            }
-
-            // Extract TOC from markdown
-            function extractTOC(markdown) {
-                const tocSection = markdown.match(
-                    /## Table of Contents[\s\S]*?(?=\n## |$)/,
-                );
-                if (!tocSection) return [];
-
-                const tocItems = [];
-                const lines = tocSection[0].split("\n");
-
-                for (const line of lines) {
-                    // Match numbered items with bold text
-                    const match = line.match(/^\d+\.\s+\*\*(.*?)\*\*/);
-                    if (match) {
-                        tocItems.push(match[1]);
-                    }
-                }
-
-                return tocItems;
-            }
-
-            let papersData = [];
-
-            async function loadPapers() {
-                try {
-                    const papers = [];
-
-                    // Load the list of paper files from papers-list.json
-                    let paperFiles = [];
-                    try {
-                        const listResponse = await fetch(
-                            "papers/papers-list.json",
+            // Initialize when document is ready
+            document.addEventListener("DOMContentLoaded", function () {
+                if (window.papersManager) {
+                    console.log("papersManager found in global scope");
+                    window.papersManager
+                        .init()
+                        .catch((e) =>
+                            console.error("Failed to initialize papers:", e),
                         );
-                        if (listResponse.ok) {
-                            paperFiles = await listResponse.json();
-                            console.log(
-                                `Loaded ${paperFiles.length} papers from papers-list.json`,
-                            );
-                        }
-                    } catch (err) {
-                        console.error("Failed to load papers-list.json:", err);
-                    }
-
-                    for (const file of paperFiles) {
-                        try {
-                            const response = await fetch(`papers/${file}`);
-                            if (response.ok) {
-                                const content = await response.text();
-                                const { metadata, markdown } =
-                                    parseFrontmatter(content);
-                                const sections =
-                                    parseMarkdownSections(markdown);
-                                const toc = extractTOC(markdown);
-
-                                papers.push({
-                                    ...metadata,
-                                    filename: file,
-                                    summary: sections.summary || "",
-                                    abstract: sections.abstract || "",
-                                    toc:
-                                        toc.length > 0
-                                            ? toc
-                                            : metadata.toc || [],
-                                    fullMarkdown: markdown,
-                                });
-                            }
-                        } catch (err) {
-                            console.error(`Failed to load ${file}:`, err);
-                        }
-                    }
-
-                    papersData = papers;
-                    renderPapers(papersData);
-                } catch (err) {
-                    console.error("Failed to load papers:", err);
-                }
-            }
-
-            function renderPapers(papers) {
-                const paperList = document.getElementById("paperList");
-                paperList.innerHTML = "";
-
-                papers.forEach((paper, index) => {
-                    const card = document.createElement("div");
-                    card.className = "paper-card";
-                    card.innerHTML = `
-                        <div class="paper-header">
-                            <div class="paper-title" onclick="toggleSummary(this)">${paper.title}</div>
-                            <span class="status ${paper.status}">${statusLabel(paper.status)}</span>
-                        </div>
-                        <div class="tags">
-                            ${(paper.tags || []).map((tag) => `<span class="tag">${tag}</span>`).join("")}
-                        </div>
-                        <div class="summary">${paper.summary}</div>
-                        <div class="link-buttons">
-                            <a class="link-btn" href="${paper.github}" target="_blank"><i class="fab fa-github"></i> GitHub</a>
-                            <a class="link-btn" href="${paper.pdf}" target="_blank"><i class="fas fa-file-pdf"></i> PDF</a>
-                            <a class="link-btn" href="${paper.purchase}" target="_blank"><i class="fas fa-shopping-cart"></i> Purchase</a>
-                        </div>
-                        <a href="#" class="read-full" onclick='openFullView(${index}); return false;'>
-                            📖 Expand Details
-                        </a>
-                    `;
-                    paperList.appendChild(card);
-                });
-            }
-
-            function statusLabel(status) {
-                if (status === "working") return "Working On";
-                if (status === "idea") return "Idea";
-                if (status === "completed") return "Completed";
-                return "";
-            }
-
-            function toggleSummary(titleElem) {
-                const summary =
-                    titleElem.parentElement.parentElement.querySelector(
-                        ".summary",
-                    );
-                summary.classList.toggle("open");
-            }
-
-            function openFullView(index) {
-                const paper = papersData[index];
-                document.getElementById("fullTitle").innerText = paper.title;
-
-                const contentDiv = document.getElementById("fullContent");
-
-                if (paper.fullMarkdown) {
-                    // Parse and render markdown content
-                    const htmlContent = marked.parse(paper.fullMarkdown);
-                    contentDiv.innerHTML = htmlContent;
                 } else {
-                    // Fallback to old format
-                    contentDiv.innerHTML = `
-                        <div>
-                            <div class="section-title">Abstract</div>
-                            <p>${paper.abstract || "N/A"}</p>
-                        </div>
-                        <div>
-                            <div class="section-title">Table of Contents</div>
-                            <div class="toc">
-                                <ul>
-                                    ${(paper.toc || []).map((item) => `<li>${item}</li>`).join("")}
-                                </ul>
-                            </div>
-                        </div>
-                    `;
+                    console.error("papersManager not found in global scope!");
+                    document.body.innerHTML +=
+                        '<div style="color:red;padding:20px;">Error: Papers module not loaded correctly</div>';
                 }
-
-                document.getElementById("fullView").style.display = "block";
-            }
-
-            function closeFullView() {
-                document.getElementById("fullView").style.display = "none";
-            }
-
-            document
-                .getElementById("searchBar")
-                .addEventListener("input", function () {
-                    const query = this.value.toLowerCase();
-                    document.querySelectorAll(".paper-card").forEach((card) => {
-                        const text = card.innerText.toLowerCase();
-                        card.style.display = text.includes(query)
-                            ? "block"
-                            : "none";
-                    });
-                });
-
-            loadPapers();
+            });
         </script>
     </body>
-
-    <footer
-        style="
-            text-align: center;
-            padding: 2rem;
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            bottom: 0;
-            position: absolute;
-            width: 100%;
-        "
-    >
-        Open Pages is an initiative by
-        <a href="https://moka-reads.org" target="_blank">MoKa Reads</a>.
-    </footer>
 </html>

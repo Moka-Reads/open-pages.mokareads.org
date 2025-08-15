@@ -1,0 +1,37 @@
+/**
+ * Maple Theme for Open Pages
+ * A warm theme
+ */
+
+:root {
+    /* Colors */
+    --color-primary: #d2691e;
+    --color-primary-light: rgba(210, 105, 30, 0.15);
+    --color-secondary: #8b4513;
+    --color-bg: #2c1a11;
+    --color-bg-card: rgba(44, 30, 17, 0.85);
+    --color-text-light: #f5e7d9;
+    --color-text-muted: #c8b9a9;
+    --color-border: rgba(245, 231, 217, 0.05);
+    --color-shadow: rgba(0, 0, 0, 0.3);
+
+    /* Status Colors */
+    --color-status-working-bg: rgba(210, 105, 30, 0.15);
+    --color-status-working-text: #e8b86d;
+    --color-status-idea-bg: rgba(133, 187, 101, 0.15);
+    --color-status-idea-text: #85bb65;
+    --color-status-completed-bg: rgba(189, 147, 112, 0.15);
+    --color-status-completed-text: #bd9370;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(
+        90deg,
+        var(--color-primary),
+        var(--color-secondary)
+    );
+    --gradient-bg: radial-gradient(
+        circle at top,
+        var(--color-bg) 0%,
+        #1a0f0a 100%
+    );
+}

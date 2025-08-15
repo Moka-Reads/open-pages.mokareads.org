@@ -1,0 +1,28 @@
+/**
+ * Default Theme for Open Pages
+ */
+
+:root {
+  /* Colors */
+  --color-primary: #58a6ff;
+  --color-primary-light: rgba(88, 166, 255, 0.15);
+  --color-secondary: #00c6ff;
+  --color-bg: #0a0f1a;
+  --color-bg-card: rgba(20, 26, 40, 0.75);
+  --color-text-light: #d0d7de;
+  --color-text-muted: #8b949e;
+  --color-border: rgba(255, 255, 255, 0.05);
+  --color-shadow: rgba(0, 0, 0, 0.3);
+
+  /* Status Colors */
+  --color-status-working-bg: rgba(255, 193, 7, 0.15);
+  --color-status-working-text: #ffc107;
+  --color-status-idea-bg: rgba(0, 255, 128, 0.15);
+  --color-status-idea-text: #00ff80;
+  --color-status-completed-bg: rgba(0, 255, 255, 0.15);
+  --color-status-completed-text: #00ffff;
+
+  /* Gradients */
+  --gradient-primary: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+  --gradient-bg: radial-gradient(circle at top, var(--color-bg) 0%, #000 100%);
+}

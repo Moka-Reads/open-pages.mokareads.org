@@ -1,0 +1,37 @@
+[
+  {
+    "title": "Algorithmic Optimization for Sustainable Computing: A Comprehensive Review",
+    "slug": "example-paper",
+    "status": "completed",
+    "tags": [
+      "Algorithms",
+      "Sustainability",
+      "Green Computing",
+      "Optimization"
+    ],
+    "summary": "A comprehensive review of algorithmic approaches to optimize computational efficiency, reduce energy consumption, and promote sustainable computing practices in modern information systems.",
+    "lastUpdated": "2023-11-15",
+    "authors": [
+      {
+        "name": "Dr. Sarah Chen",
+        "affiliation": "University of Technology"
+      },
+      {
+        "name": "Prof. James Woodward",
+        "affiliation": "Green Computing Institute"
+      }
+    ]
+  },
+  {
+    "title": "Strategic Pricing For Multi Platform Digital Publishing: A Penalty Reward Optimization Approach",
+    "slug": "strategic-pricing",
+    "status": "working",
+    "tags": [
+      "Optimization",
+      "Non-linear Programming"
+    ],
+    "summary": "Developing an optimization problem for determining optimal pricing strategies across several digital publishing platforms.",
+    "lastUpdated": "2025-08-15T02:05:06.668Z",
+    "authors": []
+  }
+]
