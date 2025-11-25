@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy WASM Site to GitHub Pages
 
 on:
   push:
@@ -21,21 +21,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
         with:
-          node-version: "18"
-          cache: "npm"
+          toolchain: stable
+          override: true
 
-      - name: Install dependencies
+      - name: Install wasm-pack
         run: |
-          npm install -g marked js-yaml glob
-          npm ci
+          curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
-      - name: Build site
+      - name: Build WASM site
         run: |
-          chmod +x ./build.sh
-          ./build.sh
+          chmod +x ./build-wasm.sh
+          ./build-wasm.sh
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -43,15 +42,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: "./"
-          # Exclude unnecessary files for the deployment
-          exclude: |
-            .github
-            .git
-            node_modules
-            package*.json
-            build.*
-            .ropeproject
+          path: "./dist-wasm"
 
   deploy:
     environment:

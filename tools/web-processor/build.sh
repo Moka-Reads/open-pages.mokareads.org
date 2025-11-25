@@ -1,0 +1,594 @@
+#!/bin/bash
+
+# Build script for Open Pages WASM processor
+# This creates a WASM version that preserves the existing UI exactly
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+DIST_DIR="$PROJECT_ROOT/dist-wasm"
+
+echo "🚀 Building Open Pages WASM Processor (UI-Preserving)"
+echo "===================================================="
+echo ""
+
+# Check prerequisites
+if ! command -v wasm-pack >/dev/null 2>&1; then
+    echo "❌ wasm-pack not found. Please install it:"
+    echo "   curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh"
+    exit 1
+fi
+
+if ! command -v tar >/dev/null 2>&1; then
+    echo "❌ tar not found"
+    exit 1
+fi
+
+# Create dist directory
+echo "📁 Setting up output directory..."
+rm -rf "$DIST_DIR"
+mkdir -p "$DIST_DIR"
+
+# Build WASM module
+echo "🔧 Building WASM module..."
+cd "$SCRIPT_DIR"
+wasm-pack build --target web --out-dir "$DIST_DIR/pkg" --release
+
+echo "✅ WASM build complete"
+
+# Create sources.tar from papers directory
+echo "📦 Creating sources.tar archive..."
+cd "$PROJECT_ROOT"
+
+if [ ! -d "papers" ]; then
+    echo "❌ papers directory not found"
+    exit 1
+fi
+
+# Create tar archive with all markdown files
+tar -cf "$DIST_DIR/sources.tar" papers/*.md
+
+echo "✅ Created sources.tar with $(tar -tf "$DIST_DIR/sources.tar" | wc -l) files"
+
+# Copy existing web assets EXACTLY as they are
+echo "🌐 Copying existing web assets..."
+
+# Copy main files
+cp "$PROJECT_ROOT/index.html" "$DIST_DIR/"
+cp -r "$PROJECT_ROOT/dist" "$DIST_DIR/" 2>/dev/null || echo "No dist directory to copy"
+
+# Copy any additional CSS/JS assets that exist
+for file in style.css script.js theme-default.css theme-moka.css; do
+    if [ -f "$PROJECT_ROOT/$file" ]; then
+        cp "$PROJECT_ROOT/$file" "$DIST_DIR/"
+    fi
+done
+
+# Create WASM-compatible version of the existing index.html
+echo "📝 Creating WASM-compatible index.html..."
+cat > "$DIST_DIR/index.html" << 'EOF'
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta
+            name="description"
+            content="Open Pages - Accessible academic research papers and publications by MoKa Reads, promoting open knowledge and collaboration"
+        />
+        <title>Open Pages by MoKa Reads</title>
+
+        <!-- Fonts -->
+        <link
+            href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Merriweather:wght@400;700&display=swap"
+            rel="stylesheet"
+        />
+
+        <!-- Font Awesome Icons -->
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        />
+
+        <!-- Stylesheets -->
+        <link rel="stylesheet" href="dist/css/style.css" />
+        <link
+            rel="stylesheet"
+            href="dist/css/theme-default.css"
+            id="theme-stylesheet"
+        />
+
+        <!-- For progressive enhancement, add a basic loading state -->
+        <style>
+            body.loading {
+                cursor: wait;
+            }
+            .loading-indicator {
+                display: none;
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                text-align: center;
+                z-index: 9999;
+            }
+            body.loading .loading-indicator {
+                display: block;
+            }
+        </style>
+    </head>
+    <body class="loading">
+        <!-- Loading Indicator -->
+        <div class="loading-indicator">
+            <i class="fas fa-spinner fa-spin fa-3x"></i>
+            <p>Loading papers...</p>
+        </div>
+
+        <!-- Theme Selector -->
+        <div class="theme-selector">
+            <label for="theme-select">
+                <i class="fas fa-palette"></i>
+                <span>Theme:</span>
+            </label>
+            <select id="theme-select">
+                <option value="default">Default</option>
+                <option value="maple">Maple</option>
+            </select>
+        </div>
+
+        <!-- Header -->
+        <header>
+            <h1>📖 Open Pages 📖</h1>
+            <p>
+                Accessible academic research, promoting open knowledge and
+                accelerating progress through collaboration
+            </p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="container">
+            <!-- Search and Filters -->
+            <div class="filters-container">
+                <div class="search-container">
+                    <i class="fas fa-search"></i>
+                    <input
+                        type="text"
+                        id="search-input"
+                        class="search-input"
+                        placeholder="Search by title, topic, or tag..."
+                    />
+                </div>
+
+                <select id="category-filter" class="filter-select">
+                    <option value="">All Categories</option>
+                    <!-- Categories will be added by JavaScript -->
+                </select>
+
+                <select id="status-filter" class="filter-select">
+                    <option value="">All Statuses</option>
+                    <option value="working">Working On</option>
+                    <option value="idea">Idea</option>
+                    <option value="completed">Completed</option>
+                </select>
+
+                <select id="sort-order" class="filter-select">
+                    <option value="title-asc">Title (A-Z)</option>
+                    <option value="title-desc">Title (Z-A)</option>
+                    <option value="date-desc">Newest First</option>
+                    <option value="date-asc">Oldest First</option>
+                </select>
+            </div>
+
+            <!-- Paper List -->
+            <div id="paper-list" class="paper-list">
+                <!-- Papers will be added by JavaScript -->
+            </div>
+        </main>
+
+        <!-- Paper Details Modal -->
+        <div id="paper-modal" class="modal">
+            <div class="modal-content">
+                <button class="close-modal">&times; Close</button>
+                <div id="modal-content">
+                    <!-- Paper details will be added by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <p>
+                Open Pages is an initiative by
+                <a href="https://mokareads.org" target="_blank">MoKa Reads</a>
+            </p>
+        </footer>
+
+        <!-- WASM Papers Manager -->
+        <script type="module">
+            import init, { PaperProcessor, process_tar_archive } from './pkg/open_pages_processor.js';
+
+            // WASM-based papers manager that implements the same interface as the original
+            class WasmPapersManager {
+                constructor() {
+                    this.processor = null;
+                    this.papers = [];
+                    this.categories = [];
+                    this.filteredPapers = [];
+                    this.currentFilters = {
+                        search: '',
+                        category: '',
+                        status: '',
+                        sortOrder: 'title-asc'
+                    };
+                }
+
+                async init() {
+                    console.log('Initializing WASM Papers Manager...');
+
+                    try {
+                        // Initialize WASM
+                        await init();
+                        console.log('✅ WASM initialized');
+
+                        // Create processor instance
+                        this.processor = new PaperProcessor();
+                        console.log('✅ Processor created');
+
+                        // Load and process sources
+                        await this.loadSources();
+
+                        // Initialize UI
+                        this.setupEventListeners();
+                        this.populateCategories();
+                        this.renderPapers();
+
+                        console.log('✅ WASM Papers Manager initialized successfully');
+                    } catch (error) {
+                        console.error('❌ Failed to initialize WASM Papers Manager:', error);
+                        throw error;
+                    }
+                }
+
+                async loadSources() {
+                    try {
+                        // Load sources.tar
+                        const sourcesResponse = await fetch('./sources.tar');
+                        if (!sourcesResponse.ok) {
+                            throw new Error(`Failed to fetch sources.tar: ${sourcesResponse.status}`);
+                        }
+                        const sourcesData = new Uint8Array(await sourcesResponse.arrayBuffer());
+                        console.log(`✅ Loaded sources.tar (${sourcesData.length} bytes)`);
+
+                        // Extract files from tar
+                        const files = process_tar_archive(sourcesData);
+                        console.log(`✅ Extracted ${files.length} files from archive`);
+
+                        // Process each markdown file
+                        for (let i = 0; i < files.length; i++) {
+                            const file = files[i];
+                            const filename = file.filename.replace('papers/', '');
+                            const content = file.content;
+
+                            try {
+                                this.processor.process_paper(filename, content);
+                                console.log(`✅ Processed ${filename}`);
+                            } catch (error) {
+                                console.error(`❌ Failed to process ${filename}:`, error);
+                            }
+                        }
+
+                        // Get processed data
+                        const papersJson = this.processor.get_papers_json();
+                        const categoriesJson = this.processor.get_categories_json();
+
+                        this.papers = JSON.parse(papersJson);
+                        this.categories = JSON.parse(categoriesJson);
+                        this.filteredPapers = [...this.papers];
+
+                        const paperCount = this.processor.get_paper_count();
+                        console.log(`✅ Processed ${paperCount} papers total`);
+
+                    } catch (error) {
+                        console.error('❌ Failed to load sources:', error);
+                        throw error;
+                    }
+                }
+
+                setupEventListeners() {
+                    // Search input
+                    const searchInput = document.getElementById('search-input');
+                    if (searchInput) {
+                        searchInput.addEventListener('input', (e) => {
+                            this.currentFilters.search = e.target.value;
+                            this.applyFilters();
+                        });
+                    }
+
+                    // Category filter
+                    const categoryFilter = document.getElementById('category-filter');
+                    if (categoryFilter) {
+                        categoryFilter.addEventListener('change', (e) => {
+                            this.currentFilters.category = e.target.value;
+                            this.applyFilters();
+                        });
+                    }
+
+                    // Status filter
+                    const statusFilter = document.getElementById('status-filter');
+                    if (statusFilter) {
+                        statusFilter.addEventListener('change', (e) => {
+                            this.currentFilters.status = e.target.value;
+                            this.applyFilters();
+                        });
+                    }
+
+                    // Sort order
+                    const sortOrder = document.getElementById('sort-order');
+                    if (sortOrder) {
+                        sortOrder.addEventListener('change', (e) => {
+                            this.currentFilters.sortOrder = e.target.value;
+                            this.applyFilters();
+                        });
+                    }
+
+                    // Modal close
+                    const modal = document.getElementById('paper-modal');
+                    const closeBtn = modal.querySelector('.close-modal');
+                    if (closeBtn) {
+                        closeBtn.addEventListener('click', () => this.closeModal());
+                    }
+
+                    // Close modal on backdrop click
+                    modal.addEventListener('click', (e) => {
+                        if (e.target === modal) {
+                            this.closeModal();
+                        }
+                    });
+                }
+
+                populateCategories() {
+                    const categoryFilter = document.getElementById('category-filter');
+                    if (!categoryFilter) return;
+
+                    // Clear existing options (except "All Categories")
+                    const existingOptions = categoryFilter.querySelectorAll('option:not(:first-child)');
+                    existingOptions.forEach(option => option.remove());
+
+                    // Add category options
+                    this.categories.forEach(category => {
+                        const option = document.createElement('option');
+                        option.value = category;
+                        option.textContent = category;
+                        categoryFilter.appendChild(option);
+                    });
+                }
+
+                applyFilters() {
+                    let filtered = [...this.papers];
+
+                    // Apply search filter
+                    if (this.currentFilters.search) {
+                        const searchTerm = this.currentFilters.search.toLowerCase();
+                        filtered = filtered.filter(paper =>
+                            paper.title.toLowerCase().includes(searchTerm) ||
+                            paper.summary.toLowerCase().includes(searchTerm) ||
+                            (paper.tags && paper.tags.some(tag => tag.toLowerCase().includes(searchTerm)))
+                        );
+                    }
+
+                    // Apply category filter
+                    if (this.currentFilters.category) {
+                        filtered = filtered.filter(paper =>
+                            paper.tags && paper.tags.includes(this.currentFilters.category)
+                        );
+                    }
+
+                    // Apply status filter
+                    if (this.currentFilters.status) {
+                        filtered = filtered.filter(paper =>
+                            paper.status === this.currentFilters.status
+                        );
+                    }
+
+                    // Apply sorting
+                    filtered.sort((a, b) => {
+                        switch (this.currentFilters.sortOrder) {
+                            case 'title-asc':
+                                return a.title.localeCompare(b.title);
+                            case 'title-desc':
+                                return b.title.localeCompare(a.title);
+                            case 'date-desc':
+                                return new Date(b.lastUpdated) - new Date(a.lastUpdated);
+                            case 'date-asc':
+                                return new Date(a.lastUpdated) - new Date(b.lastUpdated);
+                            default:
+                                return 0;
+                        }
+                    });
+
+                    this.filteredPapers = filtered;
+                    this.renderPapers();
+                }
+
+                renderPapers() {
+                    const paperList = document.getElementById('paper-list');
+                    if (!paperList) return;
+
+                    if (this.filteredPapers.length === 0) {
+                        paperList.innerHTML = '<div class="no-results">No papers found matching your criteria.</div>';
+                        return;
+                    }
+
+                    paperList.innerHTML = '';
+
+                    this.filteredPapers.forEach(paper => {
+                        const paperCard = this.createPaperCard(paper);
+                        paperList.appendChild(paperCard);
+                    });
+                }
+
+                createPaperCard(paper) {
+                    const card = document.createElement('div');
+                    card.className = 'paper-card';
+
+                    const statusClass = paper.status ? paper.status.toLowerCase() : 'unknown';
+                    const authors = paper.authors.map(author => author.name).join(', ');
+                    const tags = paper.tags ? paper.tags.map(tag => `<span class="tag">${tag}</span>`).join('') : '';
+
+                    card.innerHTML = `
+                        <div class="paper-header">
+                            <h3 class="paper-title">${paper.title}</h3>
+                            <span class="status ${statusClass}">${paper.status || 'unknown'}</span>
+                        </div>
+                        <div class="tags">${tags}</div>
+                        <div class="paper-authors">${authors}</div>
+                        <div class="paper-date">Last updated: ${new Date(paper.lastUpdated).toLocaleDateString()}</div>
+                        <div class="paper-summary">${paper.summary}</div>
+                        <div class="paper-actions">
+                            <button class="expand-btn" onclick="wasmPapersManager.openPaper('${paper.slug}')">
+                                <i class="fas fa-expand"></i>
+                                Read Full Paper
+                            </button>
+                        </div>
+                    `;
+
+                    return card;
+                }
+
+                openPaper(slug) {
+                    try {
+                        const paperJson = this.processor.get_paper_by_slug(slug);
+                        const paper = JSON.parse(paperJson);
+
+                        const modal = document.getElementById('paper-modal');
+                        const modalContent = document.getElementById('modal-content');
+
+                        const authors = paper.authors.map(author =>
+                            author.affiliation ? `${author.name} (${author.affiliation})` : author.name
+                        ).join(', ');
+
+                        const tags = paper.tags ? paper.tags.map(tag => `<span class="tag">${tag}</span>`).join('') : '';
+
+                        modalContent.innerHTML = `
+                            <h1 class="paper-detail-title">${paper.title}</h1>
+                            <div class="paper-detail-meta">
+                                <span class="status ${(paper.status || 'unknown').toLowerCase()}">${paper.status || 'unknown'}</span>
+                                <div class="tags">${tags}</div>
+                            </div>
+                            <div class="paper-detail-authors">
+                                <h3>Authors</h3>
+                                <p>${authors}</p>
+                            </div>
+                            <div class="paper-detail-date">Last updated: ${new Date(paper.lastUpdated).toLocaleDateString()}</div>
+                            <div class="paper-detail-content">
+                                ${paper.html}
+                            </div>
+                        `;
+
+                        modal.style.display = 'block';
+                        document.body.style.overflow = 'hidden';
+                    } catch (error) {
+                        console.error('Failed to open paper:', error);
+                    }
+                }
+
+                closeModal() {
+                    const modal = document.getElementById('paper-modal');
+                    modal.style.display = 'none';
+                    document.body.style.overflow = '';
+                }
+            }
+
+            // Create global instance
+            window.wasmPapersManager = new WasmPapersManager();
+            window.papersManager = window.wasmPapersManager; // For compatibility
+
+            // Initialize when DOM is ready
+            document.addEventListener('DOMContentLoaded', async () => {
+                try {
+                    // Initialize theme manager (original code)
+                    const themeManager = new (class ThemeManager {
+                        constructor() {
+                            this.themeSelect = document.getElementById("theme-select");
+                            this.initialTheme = localStorage.getItem("selectedTheme") || "default";
+                            this.init();
+                        }
+
+                        init() {
+                            this.applyTheme(this.initialTheme);
+                            if (this.themeSelect) {
+                                this.themeSelect.value = this.initialTheme;
+                                this.themeSelect.addEventListener("change", (e) => {
+                                    const selectedTheme = e.target.value;
+                                    this.applyTheme(selectedTheme);
+                                    localStorage.setItem("selectedTheme", selectedTheme);
+                                });
+                            }
+                        }
+
+                        applyTheme(theme) {
+                            const link = document.getElementById("theme-stylesheet");
+                            if (link) {
+                                let newHref = "dist/css/theme-default.css";
+                                switch (theme) {
+                                    case "default":
+                                        newHref = "dist/css/theme-default.css";
+                                        break;
+                                    case "maple":
+                                        newHref = "dist/css/theme-maple.css";
+                                        break;
+                                }
+                                link.href = newHref;
+                            }
+                        }
+                    })();
+
+                    // Initialize WASM papers manager
+                    await window.wasmPapersManager.init();
+
+                    // Remove loading state
+                    document.body.classList.remove("loading");
+                    document.body.classList.add("loaded");
+
+                } catch (error) {
+                    console.error("Failed to initialize application:", error);
+                    document.body.classList.remove("loading");
+                    document.body.classList.add("error");
+
+                    document.body.innerHTML += `
+                        <div style="color: red; background: rgba(255,0,0,0.1); padding: 20px; margin: 20px; border-radius: 5px;">
+                            <h2>Application Error</h2>
+                            <p>There was a problem loading the application: ${error.message}</p>
+                            <button onclick="location.reload()">Reload Page</button>
+                        </div>
+                    `;
+                }
+            });
+        </script>
+    </body>
+</html>
+EOF
+
+# Show results
+echo ""
+echo "🎉 Build Complete!"
+echo "=================="
+echo ""
+echo "Output directory: $DIST_DIR"
+echo "Generated files:"
+find "$DIST_DIR" -type f | sed 's/^/  /'
+
+echo ""
+echo "📊 Archive Statistics:"
+echo "  WASM size: $(ls -lh "$DIST_DIR/pkg"/*.wasm | awk '{print $5}' | head -1)"
+echo "  Sources.tar size: $(ls -lh "$DIST_DIR/sources.tar" | awk '{print $5}')"
+echo "  Total files in archive: $(tar -tf "$DIST_DIR/sources.tar" | wc -l)"
+
+echo ""
+echo "🌐 Testing:"
+echo "  cd $DIST_DIR && python3 -m http.server 8000"
+echo "  Open http://localhost:8000"
+
+echo ""
+echo "✨ This preserves your existing UI design exactly while using WASM for processing!"
