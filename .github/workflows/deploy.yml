@@ -22,10 +22,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Rust
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
-          override: true
+          targets: wasm32-unknown-unknown
 
       - name: Install wasm-pack
         run: |
@@ -35,6 +34,25 @@ jobs:
         run: |
           chmod +x ./build-wasm.sh
           ./build-wasm.sh
+          echo "Build completed, checking output..."
+          ls -la dist-wasm/
+          echo "Checking for WASM files..."
+          find dist-wasm/ -name "*.wasm" -exec ls -la {} \;
+          echo "Checking for critical files..."
+          ls -la dist-wasm/index.html dist-wasm/sources.tar dist-wasm/CNAME dist-wasm/.nojekyll 2>/dev/null || echo "Some files missing"
+
+      - name: Verify deployment files
+        run: |
+          echo "Final deployment directory contents:"
+          ls -la dist-wasm/
+          echo "Total size of deployment:"
+          du -sh dist-wasm/
+          echo "Critical files check:"
+          test -f dist-wasm/index.html && echo "✅ index.html exists" || echo "❌ index.html missing"
+          test -f dist-wasm/CNAME && echo "✅ CNAME exists" || echo "❌ CNAME missing"
+          test -f dist-wasm/.nojekyll && echo "✅ .nojekyll exists" || echo "❌ .nojekyll missing"
+          test -f dist-wasm/sources.tar && echo "✅ sources.tar exists" || echo "❌ sources.tar missing"
+          test -d dist-wasm/pkg && echo "✅ pkg directory exists" || echo "❌ pkg directory missing"
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

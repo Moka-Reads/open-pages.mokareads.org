@@ -17,13 +17,13 @@ macro_rules! console_log {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-struct Author {
+pub struct Author {
     name: String,
     affiliation: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-struct PaperMetadata {
+pub struct PaperMetadata {
     title: Option<String>,
     authors: Option<Vec<Author>>,
     tags: Option<Vec<String>>,
