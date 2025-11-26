@@ -97,6 +97,8 @@ cat > "$DIST_DIR/index.html" << 'EOF'
             name="description"
             content="Open Pages - Accessible academic research papers and publications by MoKa Reads, promoting open knowledge and collaboration"
         />
+        <meta name="cf-script-loader-disabled" content="true" />
+        <meta name="cf-rocket-loader-disabled" content="true" />
         <title>Open Pages by MoKa Reads</title>
 
         <!-- Fonts -->
@@ -226,7 +228,7 @@ cat > "$DIST_DIR/index.html" << 'EOF'
         </footer>
 
         <!-- Simple Diagnostic Script -->
-        <script>
+        <script data-cf-settings="rocket=0" data-cfasync="false">
             console.log('🔍 Starting basic diagnostic...');
 
             // Show visual diagnostic immediately
@@ -258,7 +260,7 @@ cat > "$DIST_DIR/index.html" << 'EOF'
         </script>
 
         <!-- WASM Papers Manager -->
-        <script type="module">
+        <script type="module" data-cf-settings="rocket=0" data-cfasync="false">
             console.log('🚀 Starting WASM module script...');
 
             // Show module script start
