@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple WASM Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #0a0f1a;
+            color: #d0d7de;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        .loading { background: #1a1a4a; color: #6bb6ff; }
+        .success { background: #1a4a1a; color: #6bcf7f; }
+        .error { background: #4a1a1a; color: #ff6b6b; }
+        .info { background: #2a2a2a; color: #8b949e; }
+
+        .paper-card {
+            background: rgba(20, 26, 40, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px 0;
+        }
+
+        .paper-title {
+            color: #58a6ff;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .paper-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin: 5px 0;
+        }
+
+        .status-working {
+            background: rgba(255, 193, 7, 0.15);
+            color: #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <h1></h1>📖 Simple WASM Test</h1>
+
+    <div id="status-container">
+        <div class="status loading">🔄 Starting WASM test...</div>
+    </div>
+
+    <div id="paper-container" style="display: none;">
+        <h2>📄 Loaded Papers</h2>
+        <div id="papers"></div>
+    </div>
+
+    <script>
+        let statusContainer = document.getElementById('status-container');
+        let paperContainer = document.getElementById('paper-container');
+        let papersDiv = document.getElementById('papers');
+
+        function addStatus(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = `${new Date().toLocaleTimeString()} - ${message}`;
+            statusContainer.appendChild(div);
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        function showPapers(papers) {
+            papersDiv.innerHTML = '';
+            papers.forEach(paper => {
+                const paperDiv = document.createElement('div');
+                paperDiv.className = 'paper-card';
+                paperDiv.innerHTML = `
+                    <div class="paper-title">${paper.title}</div>
+                    <div class="paper-status status-${paper.status}">${paper.status}</div>
+                    <div class="paper-summary">${paper.summary}</div>
+                `;
+                papersDiv.appendChild(paperDiv);
+            });
+            paperContainer.style.display = 'block';
+        }
+
+        // Use a regular script tag approach instead of ES6 modules
+        async function loadWasmScript() {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = './pkg/open_pages_processor.js';
+                script.onload = () => {
+                    addStatus('✅ WASM script loaded', 'success');
+                    resolve(window.wasm_bindgen);
+                };
+                script.onerror = (error) => {
+                    addStatus('❌ Failed to load WASM script', 'error');
+                    reject(error);
+                };
+                document.head.appendChild(script);
+            });
+        }
+
+        async function testWasm() {
+            try {
+                addStatus('🔍 Testing basic file access...', 'loading');
+
+                // Test 1: Basic file access
+                const testFetch = await fetch('./pkg/open_pages_processor.js');
+                if (!testFetch.ok) {
+                    throw new Error(`Cannot access WASM files: ${testFetch.status}`);
+                }
+                addStatus('✅ WASM files are accessible', 'success');
+
+                // Test 2: Load sources.tar
+                addStatus('📦 Loading sources.tar...', 'loading');
+                const sourcesResponse = await fetch('./sources.tar');
+                if (!sourcesResponse.ok) {
+                    throw new Error(`Cannot load sources.tar: ${sourcesResponse.status}`);
+                }
+                const sourcesData = new Uint8Array(await sourcesResponse.arrayBuffer());
+                addStatus(`✅ Sources loaded (${sourcesData.length} bytes)`, 'success');
+
+                // Test 3: Try ES6 module approach
+                addStatus('🔧 Attempting ES6 module import...', 'loading');
+                try {
+                    const wasmModule = await import('./pkg/open_pages_processor.js');
+                    addStatus('✅ ES6 import successful', 'success');
+
+                    // Initialize WASM
+                    await wasmModule.default();
+                    addStatus('✅ WASM initialized', 'success');
+
+                    // Create processor
+                    const processor = new wasmModule.PaperProcessor();
+                    addStatus('✅ Processor created', 'success');
+
+                    // Process tar
+                    const files = wasmModule.process_tar_archive(sourcesData);
+                    addStatus(`✅ Extracted ${files.length} files`, 'success');
+
+                    // Process papers
+                    files.forEach(file => {
+                        const filename = file.filename.replace('papers/', '');
+                        processor.process_paper(filename, file.content);
+                    });
+
+                    // Get results
+                    const papersJson = processor.get_papers_json();
+                    const papers = JSON.parse(papersJson);
+                    addStatus(`✅ Processed ${papers.length} papers`, 'success');
+
+                    // Show papers
+                    if (papers.length > 0) {
+                        showPapers(papers);
+                    }
+
+                    addStatus('🎉 All tests completed successfully!', 'success');
+
+                } catch (moduleError) {
+                    addStatus(`❌ ES6 module failed: ${moduleError.message}`, 'error');
+                    addStatus('🔄 Trying alternative approach...', 'loading');
+
+                    // Fallback: Try to detect what went wrong
+                    if (moduleError.message.includes('MIME')) {
+                        addStatus('🔍 MIME type issue detected', 'error');
+                        addStatus('💡 Server may not be serving .js files with correct MIME type', 'info');
+                    }
+                    if (moduleError.message.includes('CORS')) {
+                        addStatus('🔍 CORS issue detected', 'error');
+                        addStatus('💡 Cross-origin restrictions preventing WASM load', 'info');
+                    }
+                    if (moduleError.message.includes('network')) {
+                        addStatus('🔍 Network issue detected', 'error');
+                        addStatus('💡 Check if all files are deployed correctly', 'info');
+                    }
+
+                    throw moduleError;
+                }
+
+            } catch (error) {
+                addStatus(`❌ Test failed: ${error.message}`, 'error');
+                addStatus(`Stack: ${error.stack}`, 'info');
+
+                // Additional debugging info
+                addStatus('🔍 Environment check:', 'info');
+                addStatus(`Location: ${window.location.href}`, 'info');
+                addStatus(`User Agent: ${navigator.userAgent}`, 'info');
+                addStatus(`WASM supported: ${typeof WebAssembly !== 'undefined'}`, 'info');
+                addStatus(`ES6 modules supported: ${typeof import !== 'undefined'}`, 'info');
+            }
+        }
+
+        // Start test when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            addStatus('🚀 Starting WASM debugging test...', 'loading');
+            testWasm();
+        });
+    </script>
+</body>
+</html>
