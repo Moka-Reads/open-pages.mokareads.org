@@ -225,19 +225,65 @@ cat > "$DIST_DIR/index.html" << 'EOF'
             </p>
         </footer>
 
+        <!-- Simple Diagnostic Script -->
+        <script>
+            console.log('🔍 Starting basic diagnostic...');
+
+            // Show visual diagnostic immediately
+            function showDiagnostic(message, type = 'info') {
+                const div = document.createElement('div');
+                div.style.cssText = `
+                    position: fixed; bottom: 20px; right: 20px; z-index: 10000;
+                    background: ${type === 'error' ? '#4a1a1a' : type === 'success' ? '#1a4a1a' : '#1a1a4a'};
+                    color: ${type === 'error' ? '#ff6b6b' : type === 'success' ? '#6bcf7f' : '#6bb6ff'};
+                    padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px;
+                    border: 1px solid ${type === 'error' ? '#ff6b6b' : type === 'success' ? '#6bcf7f' : '#6bb6ff'};
+                    max-width: 300px; word-wrap: break-word;
+                `;
+                div.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+                document.body.appendChild(div);
+                setTimeout(() => document.body.removeChild(div), 5000);
+            }
+
+            // Test basic functionality first
+            try {
+                showDiagnostic('🔍 Basic JS working', 'success');
+                console.log('✅ Basic JavaScript is working');
+                console.log('🔍 WebAssembly supported:', typeof WebAssembly !== 'undefined');
+                console.log('🔍 ES6 modules supported:', typeof import !== 'undefined');
+                console.log('🔍 Current URL:', window.location.href);
+            } catch (e) {
+                showDiagnostic('❌ Basic JS failed: ' + e.message, 'error');
+            }
+        </script>
+
         <!-- WASM Papers Manager -->
         <script type="module">
             console.log('🚀 Starting WASM module script...');
+
+            // Show module script start
+            document.body.appendChild(Object.assign(document.createElement('div'), {
+                style: 'position: fixed; bottom: 70px; right: 20px; z-index: 10000; background: #1a4a1a; color: #6bcf7f; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px;',
+                textContent: '🚀 ES6 module started'
+            }));
 
             // Add global error handling
             window.addEventListener('error', (event) => {
                 console.error('🚨 Global error caught:', event.error);
                 console.error('📍 Error location:', event.filename, 'line', event.lineno);
+                document.body.appendChild(Object.assign(document.createElement('div'), {
+                    style: 'position: fixed; bottom: 120px; right: 20px; z-index: 10000; background: #4a1a1a; color: #ff6b6b; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px; max-width: 300px;',
+                    textContent: '🚨 Global error: ' + event.error.message
+                }));
             });
 
             window.addEventListener('unhandledrejection', (event) => {
                 console.error('🚨 Unhandled promise rejection:', event.reason);
                 event.preventDefault(); // Prevent the default browser handling
+                document.body.appendChild(Object.assign(document.createElement('div'), {
+                    style: 'position: fixed; bottom: 170px; right: 20px; z-index: 10000; background: #4a1a1a; color: #ff6b6b; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px; max-width: 300px;',
+                    textContent: '🚨 Promise rejection: ' + (event.reason.message || event.reason)
+                }));
             });
 
             try {
@@ -245,9 +291,19 @@ cat > "$DIST_DIR/index.html" << 'EOF'
                 console.log('🔍 Current location:', window.location.href);
                 console.log('🔍 Expected module path:', new URL('./pkg/open_pages_processor.js', window.location.href).href);
 
+                document.body.appendChild(Object.assign(document.createElement('div'), {
+                    style: 'position: fixed; bottom: 220px; right: 20px; z-index: 10000; background: #1a1a4a; color: #6bb6ff; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px;',
+                    textContent: '📦 Importing module...'
+                }));
+
                 const wasmModule = await import('./pkg/open_pages_processor.js');
                 console.log('✅ WASM module imported successfully');
                 console.log('🔍 Module exports:', Object.keys(wasmModule));
+
+                document.body.appendChild(Object.assign(document.createElement('div'), {
+                    style: 'position: fixed; bottom: 270px; right: 20px; z-index: 10000; background: #1a4a1a; color: #6bcf7f; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px;',
+                    textContent: '✅ Module imported'
+                }));
 
                 const { default: init, PaperProcessor, process_tar_archive } = wasmModule;
                 console.log('✅ WASM exports destructured');
@@ -682,6 +738,12 @@ cat > "$DIST_DIR/index.html" << 'EOF'
                     cause: moduleError.cause
                 });
 
+                // Show visual feedback immediately
+                document.body.appendChild(Object.assign(document.createElement('div'), {
+                    style: 'position: fixed; bottom: 320px; right: 20px; z-index: 10000; background: #4a1a1a; color: #ff6b6b; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px; max-width: 300px;',
+                    textContent: '❌ Module import failed: ' + moduleError.message
+                }));
+
                 // Create fallback error display
                 document.body.classList.remove("loading");
                 document.body.classList.add("error");
@@ -705,9 +767,16 @@ cat > "$DIST_DIR/index.html" << 'EOF'
                     <p><strong>Failed to load WASM module:</strong> ${moduleError.message}</p>
                     <p><strong>This usually means:</strong></p>
                     <ul>
+                        <li>ES6 module import failed</li>
                         <li>WASM files are not accessible</li>
                         <li>Server MIME types are incorrect</li>
                         <li>CORS restrictions are blocking access</li>
+                        <li>Browser compatibility issues</li>
+                    </ul>
+                    <p><strong>Try:</strong></p>
+                    <ul>
+                        <li><a href="./fallback-test.html" style="color: #58a6ff;">🔧 Fallback Test Page</a></li>
+                        <li><a href="./simple-test.html" style="color: #58a6ff;">🔍 Simple Debug Page</a></li>
                     </ul>
                     <details>
                         <summary>Technical Details</summary>
