@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta
+            name="description"
+            content="Open Pages - Accessible academic research papers and publications by MoKa Reads, promoting open knowledge and collaboration"
+        />
+        <meta name="cf-script-loader-disabled" content="true" />
+        <meta name="cf-rocket-loader-disabled" content="true" />
+        <meta http-equiv="Cache-Control" content="no-transform" />
+        <title>Open Pages by MoKa Reads (No-WASM Version)</title>
+
+        <!-- Fonts -->
+        <link
+            href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Merriweather:wght@400;700&display=swap"
+            rel="stylesheet"
+        />
+
+        <!-- Font Awesome Icons -->
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        />
+
+        <!-- Stylesheets -->
+        <link rel="stylesheet" href="dist/css/style.css" />
+        <link
+            rel="stylesheet"
+            href="dist/css/theme-default.css"
+            id="theme-stylesheet"
+        />
+
+        <style>
+            .loading-indicator {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                text-align: center;
+                z-index: 9999;
+                color: #58a6ff;
+                font-size: 1.2em;
+            }
+            body.loading .loading-indicator {
+                display: block;
+            }
+            body.loaded .loading-indicator {
+                display: none;
+            }
+            .fallback-notice {
+                background: rgba(255, 193, 7, 0.1);
+                border: 1px solid rgba(255, 193, 7, 0.3);
+                color: #ffc107;
+                padding: 15px;
+                border-radius: 8px;
+                margin: 20px 0;
+                text-align: center;
+                font-size: 0.9em;
+            }
+        </style>
+    </head>
+    <body class="loading">
+        <!-- Loading Indicator -->
+        <div class="loading-indicator">
+            <i class="fas fa-spinner fa-spin fa-3x"></i>
+            <p>Loading papers...</p>
+        </div>
+
+        <!-- Theme Selector -->
+        <div class="theme-selector">
+            <label for="theme-select">
+                <i class="fas fa-palette"></i>
+                <span>Theme:</span>
+            </label>
+            <select id="theme-select">
+                <option value="default">Default</option>
+                <option value="maple">Maple</option>
+                <option value="moka">Moka</option>
+            </select>
+        </div>
+
+        <!-- Header -->
+        <header>
+            <h1>📖 Open Pages 📖</h1>
+            <p>
+                Accessible academic research, promoting open knowledge and
+                accelerating progress through collaboration
+            </p>
+        </header>
+
+        <!-- Fallback Notice -->
+        <div class="fallback-notice">
+            <i class="fas fa-info-circle"></i>
+            This is a simplified version that works without WebAssembly for maximum compatibility.
+        </div>
+
+        <!-- Main Content -->
+        <main class="container">
+            <!-- Search and Filters -->
+            <div class="filters-container">
+                <div class="search-container">
+                    <i class="fas fa-search"></i>
+                    <input
+                        type="text"
+                        id="search-input"
+                        class="search-input"
+                        placeholder="Search by title, topic, or tag..."
+                    />
+                </div>
+
+                <select id="category-filter" class="filter-select">
+                    <option value="">All Categories</option>
+                </select>
+
+                <select id="status-filter" class="filter-select">
+                    <option value="">All Statuses</option>
+                    <option value="working">Working On</option>
+                    <option value="idea">Idea</option>
+                    <option value="completed">Completed</option>
+                </select>
+
+                <select id="sort-order" class="filter-select">
+                    <option value="title-asc">Title (A-Z)</option>
+                    <option value="title-desc">Title (Z-A)</option>
+                    <option value="date-desc">Newest First</option>
+                    <option value="date-asc">Oldest First</option>
+                </select>
+            </div>
+
+            <!-- Paper List -->
+            <div id="paper-list" class="paper-list">
+                <!-- Papers will be loaded here -->
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer>
+            <p>
+                Open Pages is an initiative by
+                <a href="https://mokareads.org" target="_blank">MoKa Reads</a>
+            </p>
+        </footer>
+
+        <script data-cfasync="false" data-cf-settings="rocket=0">
+            // Disable Cloudflare completely
+            if (typeof window.CloudFlare !== "undefined") {
+                window.CloudFlare.push(["rocket", "0"]);
+            }
+
+            class NoWasmPapersManager {
+                constructor() {
+                    this.papers = [];
+                    this.allPapers = [];
+                    this.categories = new Set();
+                    this.filteredPapers = [];
+
+                    // Filter elements
+                    this.searchInput = null;
+                    this.categoryFilter = null;
+                    this.statusFilter = null;
+                    this.sortOrder = null;
+                }
+
+                async init() {
+                    console.log('🚀 Initializing No-WASM Papers Manager...');
+
+                    await this.loadPapersDirectly();
+                    this.setupEventListeners();
+                    this.populateCategories();
+                    this.applyFilters();
+
+                    // Remove loading state
+                    document.body.classList.remove('loading');
+                    document.body.classList.add('loaded');
+
+                    console.log('✅ No-WASM Papers Manager initialized successfully');
+                }
+
+                async loadPapersDirectly() {
+                    try {
+                        console.log('📦 Loading sources.tar directly...');
+
+                        // Fetch the tar file
+                        const response = await fetch('./sources.tar');
+                        if (!response.ok) {
+                            throw new Error(`Failed to fetch sources.tar: ${response.status}`);
+                        }
+
+                        const arrayBuffer = await response.arrayBuffer();
+                        const uint8Array = new Uint8Array(arrayBuffer);
+                        console.log(`✅ Loaded sources.tar (${uint8Array.length} bytes)`);
+
+                        // Parse tar file manually
+                        const files = this.parseTarArchive(uint8Array);
+                        console.log(`📂 Extracted ${files.length} files from archive`);
+
+                        // Process markdown files
+                        this.papers = files
+                            .filter(file => file.filename.endsWith('.md'))
+                            .map(file => this.parseMarkdownFile(file))
+                            .filter(paper => paper !== null);
+
+                        this.allPapers = [...this.papers];
+                        console.log(`📄 Parsed ${this.papers.length} papers successfully`);
+
+                        // Extract categories
+                        this.papers.forEach(paper => {
+                            if (paper.tags) {
+                                paper.tags.forEach(tag => this.categories.add(tag));
+                            }
+                            if (paper.category) {
+                                this.categories.add(paper.category);
+                            }
+                        });
+
+                        console.log(`🏷️ Found ${this.categories.size} unique categories/tags`);
+
+                    } catch (error) {
+                        console.error('❌ Failed to load papers:', error);
+                        this.showError('Failed to load papers', error.message);
+                    }
+                }
+
+                parseTarArchive(uint8Array) {
+                    const files = [];
+                    let offset = 0;
+
+                    while (offset < uint8Array.length) {
+                        // Read tar header (512 bytes)
+                        const header = uint8Array.slice(offset, offset + 512);
+
+                        // Check for end of archive (two consecutive null blocks)
+                        if (header.every(byte => byte === 0)) {
+                            break;
+                        }
+
+                        // Extract filename (first 100 bytes, null-terminated)
+                        let filename = '';
+                        for (let i = 0; i < 100 && header[i] !== 0; i++) {
+                            filename += String.fromCharCode(header[i]);
+                        }
+
+                        // Extract file size (bytes 124-135, octal string)
+                        let sizeStr = '';
+                        for (let i = 124; i < 135 && header[i] !== 0; i++) {
+                            sizeStr += String.fromCharCode(header[i]);
+                        }
+                        const fileSize = parseInt(sizeStr.trim(), 8) || 0;
+
+                        // Skip to file content
+                        offset += 512;
+
+                        // Read file content if size > 0
+                        if (fileSize > 0 && filename) {
+                            const contentBytes = uint8Array.slice(offset, offset + fileSize);
+                            const content = new TextDecoder('utf-8').decode(contentBytes);
+                            files.push({ filename, content, size: fileSize });
+                        }
+
+                        // Move to next file (files are padded to 512-byte boundaries)
+                        offset += Math.ceil(fileSize / 512) * 512;
+                    }
+
+                    return files;
+                }
+
+                parseMarkdownFile(file) {
+                    try {
+                        const content = file.content;
+
+                        // Extract YAML frontmatter
+                        const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+                        if (!frontmatterMatch) {
+                            console.warn(`No frontmatter found in ${file.filename}`);
+                            return null;
+                        }
+
+                        const frontmatter = frontmatterMatch[1];
+                        const bodyContent = content.slice(frontmatterMatch[0].length);
+
+                        // Parse YAML fields manually (simple parsing for our specific structure)
+                        const title = this.extractYamlField(frontmatter, 'title');
+                        const status = this.extractYamlField(frontmatter, 'status') || 'unknown';
+                        const tags = this.extractYamlArray(frontmatter, 'tags') || [];
+                        const authors = this.extractYamlArray(frontmatter, 'authors') || [];
+
+                        // Extract summary from markdown body
+                        let summary = '';
+                        const summaryMatch = bodyContent.match(/## Summary\s*\n\n(.*?)(\n\n|$)/s);
+                        if (summaryMatch) {
+                            summary = summaryMatch[1].trim().replace(/\n/g, ' ');
+                        } else {
+                            // Fallback: use first paragraph after frontmatter
+                            const firstParagraph = bodyContent.trim().split('\n\n')[0];
+                            if (firstParagraph && !firstParagraph.startsWith('#')) {
+                                summary = firstParagraph.replace(/\n/g, ' ').substring(0, 200) + '...';
+                            }
+                        }
+
+                        return {
+                            title: title || 'Untitled',
+                            status,
+                            summary: summary || 'No summary available',
+                            tags,
+                            authors,
+                            filename: file.filename,
+                            content: bodyContent
+                        };
+
+                    } catch (error) {
+                        console.warn(`Failed to parse ${file.filename}:`, error);
+                        return null;
+                    }
+                }
+
+                extractYamlField(frontmatter, fieldName) {
+                    const match = frontmatter.match(new RegExp(`^${fieldName}:\\s*["\']?(.*?)["\']?\\s*$`, 'm'));
+                    return match ? match[1].replace(/["\'"]/g, '') : null;
+                }
+
+                extractYamlArray(frontmatter, fieldName) {
+                    const arrayMatch = frontmatter.match(new RegExp(`^${fieldName}:\\s*\\n((?:\\s*-\\s*.*\\n?)*)`,'m'));
+                    if (!arrayMatch) return null;
+
+                    const arrayContent = arrayMatch[1];
+                    return arrayContent
+                        .split('\n')
+                        .map(line => line.trim())
+                        .filter(line => line.startsWith('-'))
+                        .map(line => line.substring(1).trim().replace(/["\'"]/g, ''));
+                }
+
+                setupEventListeners() {
+                    this.searchInput = document.getElementById('search-input');
+                    this.categoryFilter = document.getElementById('category-filter');
+                    this.statusFilter = document.getElementById('status-filter');
+                    this.sortOrder = document.getElementById('sort-order');
+
+                    // Search input
+                    if (this.searchInput) {
+                        this.searchInput.addEventListener('input', () => {
+                            this.applyFilters();
+                        });
+                    }
+
+                    // Filter dropdowns
+                    [this.categoryFilter, this.statusFilter, this.sortOrder].forEach(element => {
+                        if (element) {
+                            element.addEventListener('change', () => {
+                                this.applyFilters();
+                            });
+                        }
+                    });
+
+                    // Theme selector
+                    const themeSelect = document.getElementById('theme-select');
+                    const themeLink = document.getElementById('theme-stylesheet');
+
+                    if (themeSelect && themeLink) {
+                        const savedTheme = localStorage.getItem('selectedTheme') || 'default';
+                        themeSelect.value = savedTheme;
+                        themeLink.href = `dist/css/theme-${savedTheme}.css`;
+
+                        themeSelect.addEventListener('change', (e) => {
+                            const theme = e.target.value;
+                            themeLink.href = `dist/css/theme-${theme}.css`;
+                            localStorage.setItem('selectedTheme', theme);
+                        });
+                    }
+                }
+
+                populateCategories() {
+                    if (!this.categoryFilter) return;
+
+                    // Clear existing options except "All Categories"
+                    const existingOptions = this.categoryFilter.querySelectorAll('option:not([value=""])');
+                    existingOptions.forEach(option => option.remove());
+
+                    // Add category options
+                    Array.from(this.categories).sort().forEach(category => {
+                        const option = document.createElement('option');
+                        option.value = category;
+                        option.textContent = category;
+                        this.categoryFilter.appendChild(option);
+                    });
+                }
+
+                applyFilters() {
+                    let filtered = [...this.allPapers];
+
+                    // Apply search filter
+                    const searchTerm = this.searchInput?.value.toLowerCase() || '';
+                    if (searchTerm) {
+                        filtered = filtered.filter(paper =>
+                            paper.title.toLowerCase().includes(searchTerm) ||
+                            paper.summary.toLowerCase().includes(searchTerm) ||
+                            (paper.tags && paper.tags.some(tag => tag.toLowerCase().includes(searchTerm)))
+                        );
+                    }
+
+                    // Apply category filter
+                    const selectedCategory = this.categoryFilter?.value || '';
+                    if (selectedCategory) {
+                        filtered = filtered.filter(paper =>
+                            (paper.tags && paper.tags.includes(selectedCategory)) ||
+                            paper.category === selectedCategory
+                        );
+                    }
+
+                    // Apply status filter
+                    const selectedStatus = this.statusFilter?.value || '';
+                    if (selectedStatus) {
+                        filtered = filtered.filter(paper => paper.status === selectedStatus);
+                    }
+
+                    // Apply sorting
+                    const sortOrder = this.sortOrder?.value || 'title-asc';
+                    this.sortPapers(filtered, sortOrder);
+
+                    this.filteredPapers = filtered;
+                    this.renderPapers();
+                }
+
+                sortPapers(papers, order) {
+                    papers.sort((a, b) => {
+                        switch (order) {
+                            case 'title-desc':
+                                return b.title.localeCompare(a.title);
+                            case 'date-desc':
+                            case 'date-asc':
+                                // For now, sort by filename as a proxy for date
+                                return order === 'date-desc'
+                                    ? b.filename.localeCompare(a.filename)
+                                    : a.filename.localeCompare(b.filename);
+                            case 'title-asc':
+                            default:
+                                return a.title.localeCompare(b.title);
+                        }
+                    });
+                }
+
+                renderPapers() {
+                    const paperList = document.getElementById('paper-list');
+                    if (!paperList) return;
+
+                    if (this.filteredPapers.length === 0) {
+                        paperList.innerHTML = '<p style="text-align: center; color: var(--color-text-muted); margin: 50px 0;">No papers found matching your criteria.</p>';
+                        return;
+                    }
+
+                    paperList.innerHTML = this.filteredPapers.map(paper => this.createPaperCard(paper)).join('');
+                }
+
+                createPaperCard(paper) {
+                    const statusClass = paper.status || 'unknown';
+                    const tags = paper.tags && paper.tags.length > 0
+                        ? paper.tags.map(tag => `<span class="tag">${tag}</span>`).join('')
+                        : '';
+
+                    const authors = paper.authors && paper.authors.length > 0
+                        ? `<div class="paper-authors">By: ${paper.authors.map(author =>
+                            typeof author === 'string' ? author : author.name
+                        ).join(', ')}</div>`
+                        : '';
+
+                    return `
+                        <div class="paper-card">
+                            <div class="paper-title">${paper.title}</div>
+                            <div class="paper-status status-${statusClass}">${paper.status}</div>
+                            ${authors}
+                            <div class="paper-summary">${paper.summary}</div>
+                            ${tags ? `<div class="paper-tags">${tags}</div>` : ''}
+                        </div>
+                    `;
+                }
+
+                showError(title, message) {
+                    const paperList = document.getElementById('paper-list');
+                    if (paperList) {
+                        paperList.innerHTML = `
+                            <div style="text-align: center; padding: 40px; color: var(--color-text-muted);">
+                                <h3 style="color: #f85149; margin-bottom: 15px;">⚠️ ${title}</h3>
+                                <p>${message}</p>
+                                <button onclick="location.reload();" style="margin-top: 20px; padding: 10px 20px; background: var(--color-primary); color: white; border: none; border-radius: 5px; cursor: pointer;">
+                                    Try Again
+                                </button>
+                            </div>
+                        `;
+                    }
+
+                    // Remove loading state
+                    document.body.classList.remove('loading');
+                    document.body.classList.add('loaded');
+                }
+            }
+
+            // Initialize the application
+            document.addEventListener('DOMContentLoaded', async () => {
+                console.log('🚀 Starting No-WASM Papers Application...');
+
+                try {
+                    const papersManager = new NoWasmPapersManager();
+                    await papersManager.init();
+                    console.log('✅ Application loaded successfully!');
+                } catch (error) {
+                    console.error('❌ Failed to initialize application:', error);
+                }
+            });
+
+            // Global error handling
+            window.addEventListener('error', (event) => {
+                console.error('Global error:', event.error);
+            });
+
+            window.addEventListener('unhandledrejection', (event) => {
+                console.error('Unhandled promise rejection:', event.reason);
+                event.preventDefault();
+            });
+        </script>
+    </body>
+</html>
