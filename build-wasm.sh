@@ -240,31 +240,14 @@ cat > "$DIST_DIR/index.html" << 'EOF'
         <script data-cf-settings="rocket=0" data-cfasync="false">
             console.log('🔍 Starting basic diagnostic...');
 
-            // Show visual diagnostic immediately
-            function showDiagnostic(message, type = 'info') {
-                const div = document.createElement('div');
-                div.style.cssText = `
-                    position: fixed; bottom: 20px; right: 20px; z-index: 10000;
-                    background: ${type === 'error' ? '#4a1a1a' : type === 'success' ? '#1a4a1a' : '#1a1a4a'};
-                    color: ${type === 'error' ? '#ff6b6b' : type === 'success' ? '#6bcf7f' : '#6bb6ff'};
-                    padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px;
-                    border: 1px solid ${type === 'error' ? '#ff6b6b' : type === 'success' ? '#6bcf7f' : '#6bb6ff'};
-                    max-width: 300px; word-wrap: break-word;
-                `;
-                div.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
-                document.body.appendChild(div);
-                setTimeout(() => document.body.removeChild(div), 5000);
-            }
-
             // Test basic functionality first
             try {
-                showDiagnostic('🔍 Basic JS working', 'success');
                 console.log('✅ Basic JavaScript is working');
                 console.log('🔍 WebAssembly supported:', typeof WebAssembly !== 'undefined');
                 console.log('🔍 ES6 modules supported:', typeof import !== 'undefined');
                 console.log('🔍 Current URL:', window.location.href);
             } catch (e) {
-                showDiagnostic('❌ Basic JS failed: ' + e.message, 'error');
+                console.error('❌ Basic JS failed: ' + e.message);
             }
         </script>
 
@@ -272,40 +255,21 @@ cat > "$DIST_DIR/index.html" << 'EOF'
         <script data-cfasync="false" data-cf-settings="rocket=0">
             console.log('🚀 Starting non-module WASM script...');
 
-            // Show script start
-            document.body.appendChild(Object.assign(document.createElement('div'), {
-                style: 'position: fixed; bottom: 70px; right: 20px; z-index: 10000; background: #1a4a1a; color: #6bcf7f; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px;',
-                textContent: '🚀 Non-module script started'
-            }));
-
             // Add global error handling
             window.addEventListener('error', (event) => {
                 console.error('🚨 Global error caught:', event.error);
                 console.error('📍 Error location:', event.filename, 'line', event.lineno);
-                document.body.appendChild(Object.assign(document.createElement('div'), {
-                    style: 'position: fixed; bottom: 120px; right: 20px; z-index: 10000; background: #4a1a1a; color: #ff6b6b; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px; max-width: 300px;',
-                    textContent: '🚨 Global error: ' + event.error.message
-                }));
             });
 
             window.addEventListener('unhandledrejection', (event) => {
                 console.error('🚨 Unhandled promise rejection:', event.reason);
                 event.preventDefault();
-                document.body.appendChild(Object.assign(document.createElement('div'), {
-                    style: 'position: fixed; bottom: 170px; right: 20px; z-index: 10000; background: #4a1a1a; color: #ff6b6b; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px; max-width: 300px;',
-                    textContent: '🚨 Promise rejection: ' + (event.reason.message || event.reason)
-                }));
             });
 
             // Non-module approach using dynamic import fallback
             async function loadWasmNonModule() {
                 try {
                     console.log('📦 Attempting dynamic import fallback...');
-
-                    document.body.appendChild(Object.assign(document.createElement('div'), {
-                        style: 'position: fixed; bottom: 220px; right: 20px; z-index: 10000; background: #1a1a4a; color: #6bb6ff; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px;',
-                        textContent: '📦 Dynamic import...'
-                    }));
 
                     // Create a module script dynamically to bypass Cloudflare
                     const moduleScript = document.createElement('script');
@@ -348,10 +312,6 @@ cat > "$DIST_DIR/index.html" << 'EOF'
                     document.head.removeChild(moduleScript);
 
                     console.log('✅ WASM module loaded via dynamic script');
-                    document.body.appendChild(Object.assign(document.createElement('div'), {
-                        style: 'position: fixed; bottom: 270px; right: 20px; z-index: 10000; background: #1a4a1a; color: #6bcf7f; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px;',
-                        textContent: '✅ Module loaded'
-                    }));
 
                     const { default: init, PaperProcessor, process_tar_archive } = wasmModule;
                     console.log('✅ WASM exports extracted');
@@ -787,11 +747,6 @@ cat > "$DIST_DIR/index.html" << 'EOF'
                     document.body.classList.remove("loading");
                     document.body.classList.add("error");
                     console.error('❌ Failed to load WASM module:', moduleError);
-
-                    document.body.appendChild(Object.assign(document.createElement('div'), {
-                        style: 'position: fixed; bottom: 320px; right: 20px; z-index: 10000; background: #4a1a1a; color: #ff6b6b; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px; max-width: 300px;',
-                        textContent: '❌ Module load failed: ' + moduleError.message
-                    }));
 
                     throw moduleError;
                 }
