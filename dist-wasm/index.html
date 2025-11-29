@@ -1,421 +1,716 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Open Pages by MoKa Reads</title>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <style>
-        :root {
-            --color-bg: #0d1117;
-            --color-bg-card: #161b22;
-            --color-text: #f0f6fc;
-            --color-text-muted: #8b949e;
-            --color-primary: #58a6ff;
-            --color-border: #30363d;
-            --color-accent: #f2cc60;
-            --color-status-working-bg: rgba(255, 193, 7, 0.15);
-            --color-status-working-text: #ffc107;
-        }
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta
+            name="description"
+            content="Open Pages - Accessible academic research papers and publications by MoKa Reads, promoting open knowledge and collaboration"
+        />
+        <meta name="cf-script-loader-disabled" content="true" />
+        <meta name="cf-rocket-loader-disabled" content="true" />
+        <meta http-equiv="Cache-Control" content="no-transform" />
+        <title>Open Pages by MoKa Reads</title>
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background: var(--color-bg);
-            color: var(--color-text);
-            font-family: 'Merriweather', Georgia, serif;
-            line-height: 1.6;
-            min-height: 100vh;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        header {
-            text-align: center;
-            padding: 60px 0 40px;
-            border-bottom: 1px solid var(--color-border);
-            margin-bottom: 40px;
-        }
-
-        header h1 {
-            font-size: 3rem;
-            color: var(--color-primary);
-            margin-bottom: 20px;
-            font-weight: 700;
-        }
-
-        header p {
-            font-size: 1.2rem;
-            color: var(--color-text-muted);
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .theme-selector {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: var(--color-bg-card);
-            padding: 10px 15px;
-            border-radius: 8px;
-            border: 1px solid var(--color-border);
-            color: var(--color-text-muted);
-            font-size: 0.9rem;
-        }
-
-        .theme-selector select {
-            background: var(--color-bg);
-            color: var(--color-text);
-            border: 1px solid var(--color-border);
-            border-radius: 4px;
-            padding: 5px 10px;
-            font-size: 0.9rem;
-        }
-
-        .filters-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 40px;
-            align-items: center;
-        }
-
-        .search-container {
-            position: relative;
-            flex: 1;
-            min-width: 300px;
-        }
-
-        .search-container i {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--color-text-muted);
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 12px 15px 12px 45px;
-            background: var(--color-bg-card);
-            border: 1px solid var(--color-border);
-            border-radius: 8px;
-            color: var(--color-text);
-            font-size: 1rem;
-            transition: border-color 0.2s ease;
-        }
-
-        .search-input:focus {
-            outline: none;
-            border-color: var(--color-primary);
-        }
-
-        .filter-select {
-            padding: 10px 15px;
-            background: var(--color-bg-card);
-            border: 1px solid var(--color-border);
-            border-radius: 8px;
-            color: var(--color-text);
-            font-size: 0.9rem;
-            cursor: pointer;
-        }
-
-        .paper-list {
-            display: grid;
-            gap: 30px;
-        }
-
-        .paper-card {
-            background: var(--color-bg-card);
-            border: 1px solid var(--color-border);
-            border-radius: 12px;
-            padding: 30px;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .paper-card:hover {
-            transform: translateY(-2px);
-            border-color: var(--color-primary);
-            box-shadow: 0 8px 25px rgba(88, 166, 255, 0.1);
-        }
-
-        .paper-title {
-            font-size: 1.5rem;
-            color: var(--color-primary);
-            font-weight: 700;
-            margin-bottom: 15px;
-            line-height: 1.4;
-        }
-
-        .paper-status {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 15px;
-            background: var(--color-status-working-bg);
-            color: var(--color-status-working-text);
-            border: 1px solid rgba(255, 193, 7, 0.3);
-        }
-
-        .paper-summary {
-            color: var(--color-text-muted);
-            font-size: 1rem;
-            line-height: 1.7;
-            margin-bottom: 20px;
-        }
-
-        .paper-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .tag {
-            background: rgba(88, 166, 255, 0.1);
-            color: var(--color-primary);
-            padding: 4px 12px;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            border: 1px solid rgba(88, 166, 255, 0.2);
-            font-weight: 500;
-        }
-
-        footer {
-            text-align: center;
-            padding: 60px 0 40px;
-            border-top: 1px solid var(--color-border);
-            margin-top: 80px;
-            color: var(--color-text-muted);
-        }
-
-        footer a {
-            color: var(--color-primary);
-            text-decoration: none;
-        }
-
-        footer a:hover {
-            text-decoration: underline;
-        }
-
-        .notice {
-            background: rgba(255, 193, 7, 0.1);
-            border: 1px solid rgba(255, 193, 7, 0.3);
-            color: var(--color-accent);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 40px;
-            text-align: center;
-        }
-
-        .notice i {
-            margin-right: 10px;
-            font-size: 1.1rem;
-        }
-
-        @media (max-width: 768px) {
-            header h1 {
-                font-size: 2rem;
+        <!-- Cloudflare Script Exclusion -->
+        <script data-cfasync="false" data-cf-settings="rocket=0">
+            // Disable Cloudflare optimizations globally
+            if (typeof window.CloudFlare !== 'undefined') {
+                window.CloudFlare.push(['rocket', '0']);
             }
+        </script>
 
-            header p {
-                font-size: 1rem;
+        <!-- Fonts -->
+        <link
+            href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Merriweather:wght@400;700&display=swap"
+            rel="stylesheet"
+        />
+
+        <!-- Font Awesome Icons -->
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        />
+
+        <!-- Stylesheets -->
+        <link rel="stylesheet" href="dist/css/style.css" />
+        <link
+            rel="stylesheet"
+            href="dist/css/theme-default.css"
+            id="theme-stylesheet"
+        />
+
+        <!-- For progressive enhancement, add a basic loading state -->
+        <style>
+            body.loading {
+                cursor: wait;
             }
-
-            .filters-container {
-                flex-direction: column;
-                align-items: stretch;
+            .loading-indicator {
+                display: none;
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                text-align: center;
+                z-index: 9999;
             }
-
-            .search-container {
-                min-width: auto;
+            body.loading .loading-indicator {
+                display: block;
             }
+        </style>
+    </head>
+    <body class="loading">
+        <!-- Loading Indicator -->
+        <div class="loading-indicator">
+            <i class="fas fa-spinner fa-spin fa-3x"></i>
+            <p>Loading papers...</p>
+        </div>
 
-            .theme-selector {
-                position: static;
-                margin-bottom: 20px;
-                justify-content: center;
-            }
+        <!-- Theme Selector -->
+        <div class="theme-selector">
+            <label for="theme-select">
+                <i class="fas fa-palette"></i>
+                <span>Theme:</span>
+            </label>
+            <select id="theme-select">
+                <option value="default">Default</option>
+                <option value="maple">Maple</option>
+                <option value="moka">Moka</option>
+            </select>
+        </div>
 
-            .paper-card {
-                padding: 20px;
-            }
-
-            .paper-title {
-                font-size: 1.3rem;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="theme-selector">
-        <i class="fas fa-palette"></i>
-        <span>Theme:</span>
-        <select id="theme-select">
-            <option value="default">Default</option>
-            <option value="maple">Maple</option>
-            <option value="moka">Moka</option>
-        </select>
-    </div>
-
-    <header>
-        <div class="container">
+        <!-- Header -->
+        <header>
             <h1>📖 Open Pages 📖</h1>
-            <p>Accessible academic research, promoting open knowledge and accelerating progress through collaboration</p>
-        </div>
-    </header>
+            <p>
+                Accessible academic research, promoting open knowledge and
+                accelerating progress through collaboration
+            </p>
+        </header>
 
-    <main class="container">
-        <div class="notice">
-            <i class="fas fa-info-circle"></i>
-            Simplified version running without WebAssembly for maximum compatibility
-        </div>
+        <!-- Main Content -->
+        <main class="container">
+            <!-- Search and Filters -->
+            <div class="filters-container">
+                <div class="search-container">
+                    <i class="fas fa-search"></i>
+                    <input
+                        type="text"
+                        id="search-input"
+                        class="search-input"
+                        placeholder="Search by title, topic, or tag..."
+                    />
+                </div>
 
-        <div class="filters-container">
-            <div class="search-container">
-                <i class="fas fa-search"></i>
-                <input type="text" class="search-input" placeholder="Search by title, topic, or tag..." id="search-input">
+                <select id="category-filter" class="filter-select">
+                    <option value="">All Categories</option>
+                    <!-- Categories will be added by JavaScript -->
+                </select>
+
+                <select id="status-filter" class="filter-select">
+                    <option value="">All Statuses</option>
+                    <option value="working">Working On</option>
+                    <option value="idea">Idea</option>
+                    <option value="completed">Completed</option>
+                </select>
+
+                <select id="sort-order" class="filter-select">
+                    <option value="title-asc">Title (A-Z)</option>
+                    <option value="title-desc">Title (Z-A)</option>
+                    <option value="date-desc">Newest First</option>
+                    <option value="date-asc">Oldest First</option>
+                </select>
             </div>
 
-            <select class="filter-select" id="category-filter">
-                <option value="">All Categories</option>
-                <option value="optimization">Optimization</option>
-                <option value="nonlinear-programming">Non-linear Programming</option>
-            </select>
+            <!-- Paper List -->
+            <div id="paper-list" class="paper-list">
+                <!-- Papers will be added by JavaScript -->
+            </div>
+        </main>
 
-            <select class="filter-select" id="status-filter">
-                <option value="">All Statuses</option>
-                <option value="working">Working On</option>
-                <option value="idea">Idea</option>
-                <option value="completed">Completed</option>
-            </select>
-
-            <select class="filter-select" id="sort-order">
-                <option value="title-asc">Title (A-Z)</option>
-                <option value="title-desc">Title (Z-A)</option>
-            </select>
-        </div>
-
-        <div class="paper-list" id="paper-list">
-            <div class="paper-card">
-                <div class="paper-title">Strategic Pricing For Multi Platform Digital Publishing: A Penalty Reward Optimization Approach</div>
-                <div class="paper-status">working</div>
-                <div class="paper-summary">
-                    Developing an optimization problem for determining optimal pricing strategies across several digital publishing platforms. This research explores penalty-reward mechanisms to balance revenue optimization with market accessibility.
-                </div>
-                <div class="paper-tags">
-                    <span class="tag">Optimization</span>
-                    <span class="tag">Non-linear Programming</span>
-                    <span class="tag">Digital Publishing</span>
-                    <span class="tag">Pricing Strategy</span>
+        <!-- Paper Details Modal -->
+        <div id="paper-modal" class="modal">
+            <div class="modal-content">
+                <button class="close-modal">&times; Close</button>
+                <div id="modal-content">
+                    <!-- Paper details will be added by JavaScript -->
                 </div>
             </div>
         </div>
-    </main>
 
-    <footer>
-        <div class="container">
-            <p>Open Pages is an initiative by <a href="https://mokareads.org" target="_blank">MoKa Reads</a></p>
-        </div>
-    </footer>
+        <!-- Footer -->
+        <footer>
+            <p>
+                Open Pages is an initiative by
+                <a href="https://mokareads.org" target="_blank">MoKa Reads</a>
+            </p>
+        </footer>
 
-    <script>
-        // Theme switching
-        const themeSelect = document.getElementById('theme-select');
-        const savedTheme = localStorage.getItem('selectedTheme') || 'default';
-        themeSelect.value = savedTheme;
+        <!-- Simple Diagnostic Script -->
+        <script data-cf-settings="rocket=0" data-cfasync="false">
+            console.log('🔍 Starting basic diagnostic...');
 
-        themeSelect.addEventListener('change', function() {
-            const theme = this.value;
-            localStorage.setItem('selectedTheme', theme);
-            // Note: Theme CSS files would need to be loaded here
-            console.log('Theme changed to:', theme);
-        });
+            // Show visual diagnostic immediately
+            function showDiagnostic(message, type = 'info') {
+                const div = document.createElement('div');
+                div.style.cssText = `
+                    position: fixed; bottom: 20px; right: 20px; z-index: 10000;
+                    background: ${type === 'error' ? '#4a1a1a' : type === 'success' ? '#1a4a1a' : '#1a1a4a'};
+                    color: ${type === 'error' ? '#ff6b6b' : type === 'success' ? '#6bcf7f' : '#6bb6ff'};
+                    padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px;
+                    border: 1px solid ${type === 'error' ? '#ff6b6b' : type === 'success' ? '#6bcf7f' : '#6bb6ff'};
+                    max-width: 300px; word-wrap: break-word;
+                `;
+                div.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+                document.body.appendChild(div);
+                setTimeout(() => document.body.removeChild(div), 5000);
+            }
 
-        // Search functionality
-        const searchInput = document.getElementById('search-input');
-        const categoryFilter = document.getElementById('category-filter');
-        const statusFilter = document.getElementById('status-filter');
-        const sortOrder = document.getElementById('sort-order');
-        const paperList = document.getElementById('paper-list');
+            // Test basic functionality first
+            try {
+                showDiagnostic('🔍 Basic JS working', 'success');
+                console.log('✅ Basic JavaScript is working');
+                console.log('🔍 WebAssembly supported:', typeof WebAssembly !== 'undefined');
+                console.log('🔍 ES6 modules supported:', typeof import !== 'undefined');
+                console.log('🔍 Current URL:', window.location.href);
+            } catch (e) {
+                showDiagnostic('❌ Basic JS failed: ' + e.message, 'error');
+            }
+        </script>
 
-        function applyFilters() {
-            const searchTerm = searchInput.value.toLowerCase();
-            const selectedCategory = categoryFilter.value;
-            const selectedStatus = statusFilter.value;
+        <!-- WASM Papers Manager - Non-Module Fallback -->
+        <script data-cfasync="false" data-cf-settings="rocket=0">
+            console.log('🚀 Starting non-module WASM script...');
 
-            // Get all paper cards
-            const paperCards = paperList.querySelectorAll('.paper-card');
+            // Show script start
+            document.body.appendChild(Object.assign(document.createElement('div'), {
+                style: 'position: fixed; bottom: 70px; right: 20px; z-index: 10000; background: #1a4a1a; color: #6bcf7f; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px;',
+                textContent: '🚀 Non-module script started'
+            }));
 
-            paperCards.forEach(card => {
-                const title = card.querySelector('.paper-title').textContent.toLowerCase();
-                const summary = card.querySelector('.paper-summary').textContent.toLowerCase();
-                const status = card.querySelector('.paper-status').textContent.toLowerCase();
-                const tags = Array.from(card.querySelectorAll('.tag')).map(tag => tag.textContent.toLowerCase());
-
-                let showCard = true;
-
-                // Apply search filter
-                if (searchTerm && !title.includes(searchTerm) && !summary.includes(searchTerm) && !tags.some(tag => tag.includes(searchTerm))) {
-                    showCard = false;
-                }
-
-                // Apply category filter
-                if (selectedCategory && !tags.includes(selectedCategory.toLowerCase().replace('-', ' '))) {
-                    showCard = false;
-                }
-
-                // Apply status filter
-                if (selectedStatus && status !== selectedStatus) {
-                    showCard = false;
-                }
-
-                card.style.display = showCard ? 'block' : 'none';
-            });
-        }
-
-        // Add event listeners
-        searchInput.addEventListener('input', applyFilters);
-        categoryFilter.addEventListener('change', applyFilters);
-        statusFilter.addEventListener('change', applyFilters);
-
-        sortOrder.addEventListener('change', function() {
-            const cards = Array.from(paperList.querySelectorAll('.paper-card'));
-            const order = this.value;
-
-            cards.sort((a, b) => {
-                const titleA = a.querySelector('.paper-title').textContent;
-                const titleB = b.querySelector('.paper-title').textContent;
-
-                if (order === 'title-desc') {
-                    return titleB.localeCompare(titleA);
-                } else {
-                    return titleA.localeCompare(titleB);
-                }
+            // Add global error handling
+            window.addEventListener('error', (event) => {
+                console.error('🚨 Global error caught:', event.error);
+                console.error('📍 Error location:', event.filename, 'line', event.lineno);
+                document.body.appendChild(Object.assign(document.createElement('div'), {
+                    style: 'position: fixed; bottom: 120px; right: 20px; z-index: 10000; background: #4a1a1a; color: #ff6b6b; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px; max-width: 300px;',
+                    textContent: '🚨 Global error: ' + event.error.message
+                }));
             });
 
-            // Re-append sorted cards
-            cards.forEach(card => paperList.appendChild(card));
-        });
+            window.addEventListener('unhandledrejection', (event) => {
+                console.error('🚨 Unhandled promise rejection:', event.reason);
+                event.preventDefault();
+                document.body.appendChild(Object.assign(document.createElement('div'), {
+                    style: 'position: fixed; bottom: 170px; right: 20px; z-index: 10000; background: #4a1a1a; color: #ff6b6b; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px; max-width: 300px;',
+                    textContent: '🚨 Promise rejection: ' + (event.reason.message || event.reason)
+                }));
+            });
 
-        console.log('✅ Simple Open Pages loaded successfully!');
-    </script>
-</body>
+            // Non-module approach using dynamic import fallback
+            async function loadWasmNonModule() {
+                try {
+                    console.log('📦 Attempting dynamic import fallback...');
+
+                    document.body.appendChild(Object.assign(document.createElement('div'), {
+                        style: 'position: fixed; bottom: 220px; right: 20px; z-index: 10000; background: #1a1a4a; color: #6bb6ff; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px;',
+                        textContent: '📦 Dynamic import...'
+                    }));
+
+                    // Create a module script dynamically to bypass Cloudflare
+                    const moduleScript = document.createElement('script');
+                    moduleScript.type = 'module';
+                    moduleScript.setAttribute('data-cfasync', 'false');
+                    moduleScript.setAttribute('data-cf-settings', 'rocket=0');
+
+                    const scriptContent = `
+                        (async () => {
+                            try {
+                                const wasmModule = await import('./pkg/open_pages_processor.js');
+                                window.wasmModuleLoaded = wasmModule;
+                                window.dispatchEvent(new CustomEvent('wasmModuleReady'));
+                            } catch (error) {
+                                window.wasmModuleError = error;
+                                window.dispatchEvent(new CustomEvent('wasmModuleError'));
+                            }
+                        })();
+                    `;
+
+                    moduleScript.textContent = scriptContent;
+
+                    // Wait for module to load
+                    const modulePromise = new Promise((resolve, reject) => {
+                        window.addEventListener('wasmModuleReady', () => {
+                            resolve(window.wasmModuleLoaded);
+                        }, { once: true });
+
+                        window.addEventListener('wasmModuleError', () => {
+                            reject(window.wasmModuleError);
+                        }, { once: true });
+
+                        setTimeout(() => {
+                            reject(new Error('Module load timeout'));
+                        }, 10000);
+                    });
+
+                    document.head.appendChild(moduleScript);
+                    const wasmModule = await modulePromise;
+                    document.head.removeChild(moduleScript);
+
+                    console.log('✅ WASM module loaded via dynamic script');
+                    document.body.appendChild(Object.assign(document.createElement('div'), {
+                        style: 'position: fixed; bottom: 270px; right: 20px; z-index: 10000; background: #1a4a1a; color: #6bcf7f; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px;',
+                        textContent: '✅ Module loaded'
+                    }));
+
+                    const { default: init, PaperProcessor, process_tar_archive } = wasmModule;
+                    console.log('✅ WASM exports extracted');
+
+                // WASM-based papers manager that implements the same interface as the original
+                class WasmPapersManager {
+                    constructor() {
+                        console.log('🏗️ Creating WasmPapersManager instance...');
+                        this.processor = null;
+                        this.papers = [];
+                        this.categories = [];
+                        this.filteredPapers = [];
+                        this.currentFilters = {
+                            search: '',
+                            category: '',
+                            status: '',
+                            sortOrder: 'title-asc'
+                        };
+                        console.log('✅ WasmPapersManager constructor complete');
+                    }
+
+                    async init() {
+                        console.log('🚀 Initializing WASM Papers Manager...');
+
+                        try {
+                            // Initialize WASM
+                            console.log('⚙️ Calling WASM init()...');
+                            await init();
+                            console.log('✅ WASM initialized');
+
+                            // Create processor instance
+                            console.log('🏗️ Creating PaperProcessor...');
+                            this.processor = new PaperProcessor();
+                            console.log('✅ Processor created');
+
+                            // Load and process sources
+                            console.log('📂 Loading sources...');
+                            await this.loadSources();
+
+                            // Initialize UI
+                            console.log('🎨 Setting up UI...');
+                            this.setupEventListeners();
+                            this.populateCategories();
+                            this.renderPapers();
+
+                            console.log('✅ WASM Papers Manager initialized successfully');
+                        } catch (error) {
+                            console.error('❌ Failed to initialize WASM Papers Manager:', error);
+                            console.error('📍 Error stack:', error.stack);
+                            throw error;
+                        }
+                    }
+
+                async loadSources() {
+                    try {
+                        // Load sources.tar
+                        console.log('📦 Fetching sources.tar...');
+                        const sourcesResponse = await fetch('./sources.tar');
+                        if (!sourcesResponse.ok) {
+                            console.error(`❌ Failed to fetch sources.tar: HTTP ${sourcesResponse.status}`);
+                            throw new Error(`Failed to fetch sources.tar: ${sourcesResponse.status}`);
+                        }
+                        console.log('📦 Converting sources.tar to array buffer...');
+                        const sourcesData = new Uint8Array(await sourcesResponse.arrayBuffer());
+                        console.log(`✅ Loaded sources.tar (${sourcesData.length} bytes)`);
+
+                        // Extract files from tar
+                        console.log('📂 Processing tar archive...');
+                        const files = process_tar_archive(sourcesData);
+                        console.log(`✅ Extracted ${files.length} files from archive`);
+
+                        if (files.length === 0) {
+                            console.warn('⚠️ No files found in tar archive');
+                        }
+
+                        // Process each markdown file
+                        console.log('📄 Processing individual papers...');
+                        for (let i = 0; i < files.length; i++) {
+                            const file = files[i];
+                            const filename = file.filename.replace('papers/', '');
+                            const content = file.content;
+
+                            console.log(`📄 Processing file ${i + 1}/${files.length}: ${filename}`);
+                            try {
+                                this.processor.process_paper(filename, content);
+                                console.log(`✅ Processed ${filename}`);
+                            } catch (error) {
+                                console.error(`❌ Failed to process ${filename}:`, error);
+                                console.error('📍 Processing error stack:', error.stack);
+                            }
+                        }
+
+                        // Get processed data
+                        console.log('📊 Getting processed data...');
+                        const papersJson = this.processor.get_papers_json();
+                        const categoriesJson = this.processor.get_categories_json();
+
+                        console.log(`📊 Papers JSON length: ${papersJson.length} chars`);
+                        console.log(`📊 Categories JSON length: ${categoriesJson.length} chars`);
+
+                        this.papers = JSON.parse(papersJson);
+                        this.categories = JSON.parse(categoriesJson);
+                        this.filteredPapers = [...this.papers];
+
+                        const paperCount = this.processor.get_paper_count();
+                        console.log(`✅ Processed ${paperCount} papers total`);
+                        console.log('📄 Paper titles:', this.papers.map(p => p.title));
+
+                    } catch (error) {
+                        console.error('❌ Failed to load sources:', error);
+                        throw error;
+                    }
+                }
+
+                setupEventListeners() {
+                    // Search input
+                    const searchInput = document.getElementById('search-input');
+                    if (searchInput) {
+                        searchInput.addEventListener('input', (e) => {
+                            this.currentFilters.search = e.target.value;
+                            this.applyFilters();
+                        });
+                    }
+
+                    // Category filter
+                    const categoryFilter = document.getElementById('category-filter');
+                    if (categoryFilter) {
+                        categoryFilter.addEventListener('change', (e) => {
+                            this.currentFilters.category = e.target.value;
+                            this.applyFilters();
+                        });
+                    }
+
+                    // Status filter
+                    const statusFilter = document.getElementById('status-filter');
+                    if (statusFilter) {
+                        statusFilter.addEventListener('change', (e) => {
+                            this.currentFilters.status = e.target.value;
+                            this.applyFilters();
+                        });
+                    }
+
+                    // Sort order
+                    const sortOrder = document.getElementById('sort-order');
+                    if (sortOrder) {
+                        sortOrder.addEventListener('change', (e) => {
+                            this.currentFilters.sortOrder = e.target.value;
+                            this.applyFilters();
+                        });
+                    }
+
+                    // Modal close
+                    const modal = document.getElementById('paper-modal');
+                    const closeBtn = modal.querySelector('.close-modal');
+                    if (closeBtn) {
+                        closeBtn.addEventListener('click', () => this.closeModal());
+                    }
+
+                    // Close modal on backdrop click
+                    modal.addEventListener('click', (e) => {
+                        if (e.target === modal) {
+                            this.closeModal();
+                        }
+                    });
+                }
+
+                populateCategories() {
+                    const categoryFilter = document.getElementById('category-filter');
+                    if (!categoryFilter) return;
+
+                    // Clear existing options (except "All Categories")
+                    const existingOptions = categoryFilter.querySelectorAll('option:not(:first-child)');
+                    existingOptions.forEach(option => option.remove());
+
+                    // Add category options
+                    this.categories.forEach(category => {
+                        const option = document.createElement('option');
+                        option.value = category;
+                        option.textContent = category;
+                        categoryFilter.appendChild(option);
+                    });
+                }
+
+                applyFilters() {
+                    let filtered = [...this.papers];
+
+                    // Apply search filter
+                    if (this.currentFilters.search) {
+                        const searchTerm = this.currentFilters.search.toLowerCase();
+                        filtered = filtered.filter(paper =>
+                            paper.title.toLowerCase().includes(searchTerm) ||
+                            paper.summary.toLowerCase().includes(searchTerm) ||
+                            (paper.tags && paper.tags.some(tag => tag.toLowerCase().includes(searchTerm)))
+                        );
+                    }
+
+                    // Apply category filter
+                    if (this.currentFilters.category) {
+                        filtered = filtered.filter(paper =>
+                            paper.tags && paper.tags.includes(this.currentFilters.category)
+                        );
+                    }
+
+                    // Apply status filter
+                    if (this.currentFilters.status) {
+                        filtered = filtered.filter(paper =>
+                            paper.status === this.currentFilters.status
+                        );
+                    }
+
+                    // Apply sorting
+                    filtered.sort((a, b) => {
+                        switch (this.currentFilters.sortOrder) {
+                            case 'title-asc':
+                                return a.title.localeCompare(b.title);
+                            case 'title-desc':
+                                return b.title.localeCompare(a.title);
+                            case 'date-desc':
+                                return new Date(b.lastUpdated) - new Date(a.lastUpdated);
+                            case 'date-asc':
+                                return new Date(a.lastUpdated) - new Date(b.lastUpdated);
+                            default:
+                                return 0;
+                        }
+                    });
+
+                    this.filteredPapers = filtered;
+                    this.renderPapers();
+                }
+
+                renderPapers() {
+                    const paperList = document.getElementById('paper-list');
+                    if (!paperList) return;
+
+                    if (this.filteredPapers.length === 0) {
+                        paperList.innerHTML = '<div class="no-results">No papers found matching your criteria.</div>';
+                        return;
+                    }
+
+                    paperList.innerHTML = '';
+
+                    this.filteredPapers.forEach(paper => {
+                        const paperCard = this.createPaperCard(paper);
+                        paperList.appendChild(paperCard);
+                    });
+                }
+
+                createPaperCard(paper) {
+                    const card = document.createElement('div');
+                    card.className = 'paper-card';
+
+                    const statusClass = paper.status ? paper.status.toLowerCase() : 'unknown';
+                    const authors = paper.authors.map(author => author.name).join(', ');
+                    const tags = paper.tags ? paper.tags.map(tag => `<span class="tag">${tag}</span>`).join('') : '';
+
+                    card.innerHTML = `
+                        <div class="paper-header">
+                            <h3 class="paper-title">${paper.title}</h3>
+                            <span class="status ${statusClass}">${paper.status || 'unknown'}</span>
+                        </div>
+                        <div class="tags">${tags}</div>
+                        <div class="paper-authors">${authors}</div>
+                        <div class="paper-date">Last updated: ${new Date(paper.lastUpdated).toLocaleDateString()}</div>
+                        <div class="paper-summary">${paper.summary}</div>
+                        <div class="paper-actions">
+                            <button class="expand-btn" onclick="wasmPapersManager.openPaper('${paper.slug}')">
+                                <i class="fas fa-expand"></i>
+                                Read Full Paper
+                            </button>
+                        </div>
+                    `;
+
+                    return card;
+                }
+
+                openPaper(slug) {
+                    try {
+                        const paperJson = this.processor.get_paper_by_slug(slug);
+                        const paper = JSON.parse(paperJson);
+
+                        const modal = document.getElementById('paper-modal');
+                        const modalContent = document.getElementById('modal-content');
+
+                        const authors = paper.authors.map(author =>
+                            author.affiliation ? `${author.name} (${author.affiliation})` : author.name
+                        ).join(', ');
+
+                        const tags = paper.tags ? paper.tags.map(tag => `<span class="tag">${tag}</span>`).join('') : '';
+
+                        modalContent.innerHTML = `
+                            <h1 class="paper-detail-title">${paper.title}</h1>
+                            <div class="paper-detail-meta">
+                                <span class="status ${(paper.status || 'unknown').toLowerCase()}">${paper.status || 'unknown'}</span>
+                                <div class="tags">${tags}</div>
+                            </div>
+                            <div class="paper-detail-authors">
+                                <h3>Authors</h3>
+                                <p>${authors}</p>
+                            </div>
+                            <div class="paper-detail-date">Last updated: ${new Date(paper.lastUpdated).toLocaleDateString()}</div>
+                            <div class="paper-detail-content">
+                                ${paper.html}
+                            </div>
+                        `;
+
+                        modal.style.display = 'block';
+                        document.body.style.overflow = 'hidden';
+                    } catch (error) {
+                        console.error('Failed to open paper:', error);
+                    }
+                }
+
+                closeModal() {
+                    const modal = document.getElementById('paper-modal');
+                    modal.style.display = 'none';
+                    document.body.style.overflow = '';
+                }
+            }
+
+            // Create global instance
+            console.log('🏗️ Creating global WasmPapersManager instance...');
+            window.wasmPapersManager = new WasmPapersManager();
+            window.papersManager = window.wasmPapersManager; // For compatibility
+            console.log('✅ Global instance created');
+
+            // Initialize when DOM is ready
+            const initApp = async () => {
+                try {
+                    console.log("🚀 DOM loaded, starting initialization...");
+                    // Initialize theme manager (original code)
+                    const themeManager = new (class ThemeManager {
+                        constructor() {
+                            this.themeSelect = document.getElementById("theme-select");
+                            this.initialTheme = localStorage.getItem("selectedTheme") || "default";
+                            this.init();
+                        }
+
+                        init() {
+                            this.applyTheme(this.initialTheme);
+                            if (this.themeSelect) {
+                                this.themeSelect.value = this.initialTheme;
+                                this.themeSelect.addEventListener("change", (e) => {
+                                    const selectedTheme = e.target.value;
+                                    this.applyTheme(selectedTheme);
+                                    localStorage.setItem("selectedTheme", selectedTheme);
+                                });
+                            }
+                        }
+
+                        applyTheme(theme) {
+                            const link = document.getElementById("theme-stylesheet");
+                            if (link) {
+                                let newHref = "dist/css/theme-default.css";
+                                switch (theme) {
+                                    case "default":
+                                        newHref = "dist/css/theme-default.css";
+                                        break;
+                                    case "maple":
+                                        newHref = "dist/css/theme-maple.css";
+                                        break;
+                                    case "moka":
+                                        newHref = "dist/css/theme-moka.css";
+                                        break;
+                                }
+                                link.href = newHref;
+                                console.log("Applied theme:", theme, "->", newHref);
+                            }
+                        }
+                    })();
+
+                    // Initialize WASM papers manager
+                    console.log('🚀 Initializing WASM papers manager...');
+                    await window.wasmPapersManager.init();
+                    console.log('✅ WASM papers manager initialized successfully');
+
+                    // Remove loading state
+                    console.log('🎨 Removing loading state and showing content...');
+                    document.body.classList.remove("loading");
+                    document.body.classList.add("loaded");
+                    console.log('✅ Application fully initialized!');
+
+                } catch (error) {
+                    console.error("❌ Failed to initialize application:", error);
+                    console.error("📍 Full error stack:", error.stack);
+                    console.error("📊 Error details:", {
+                        name: error.name,
+                        message: error.message,
+                        cause: error.cause,
+                        fileName: error.fileName,
+                        lineNumber: error.lineNumber
+                    });
+
+                    document.body.classList.remove("loading");
+                    document.body.classList.add("error");
+
+                    const errorDiv = document.createElement('div');
+                    errorDiv.style.cssText = `
+                        position: fixed;
+                        top: 20px;
+                        left: 20px;
+                        right: 20px;
+                        z-index: 10000;
+                        color: #ff6b6b;
+                        background: rgba(255,0,0,0.1);
+                        padding: 20px;
+                        border: 1px solid #ff6b6b;
+                        border-radius: 5px;
+                        font-family: monospace;
+                    `;
+                    errorDiv.innerHTML = `
+                        <h2>🚨 Application Error</h2>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p><strong>Type:</strong> ${error.name}</p>
+                        <details>
+                            <summary>Technical Details</summary>
+                            <pre>${error.stack}</pre>
+                        </details>
+                        <button onclick="console.clear(); location.reload();" style="margin-top: 10px; padding: 5px 10px; background: #ff6b6b; color: white; border: none; border-radius: 3px;">Reload Page</button>
+                        <button onclick="this.parentElement.remove();" style="margin-top: 10px; margin-left: 10px; padding: 5px 10px; background: #666; color: white; border: none; border-radius: 3px;">Dismiss</button>
+                    `;
+                    document.body.appendChild(errorDiv);
+                }
+            };
+
+            if (document.readyState === "loading") {
+                document.addEventListener("DOMContentLoaded", initApp);
+            } else {
+                initApp();
+            }
+
+                    return { init, PaperProcessor, process_tar_archive };
+                } catch (moduleError) {
+                    document.body.classList.remove("loading");
+                    document.body.classList.add("error");
+                    console.error('❌ Failed to load WASM module:', moduleError);
+
+                    document.body.appendChild(Object.assign(document.createElement('div'), {
+                        style: 'position: fixed; bottom: 320px; right: 20px; z-index: 10000; background: #4a1a1a; color: #ff6b6b; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px; max-width: 300px;',
+                        textContent: '❌ Module load failed: ' + moduleError.message
+                    }));
+
+                    throw moduleError;
+                }
+            }
+
+            // Main initialization function
+
+            // Start the initialization
+            loadWasmNonModule();
+        </script>
+    </body>
 </html>

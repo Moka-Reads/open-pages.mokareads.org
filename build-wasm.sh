@@ -678,7 +678,7 @@ cat > "$DIST_DIR/index.html" << 'EOF'
             console.log('✅ Global instance created');
 
             // Initialize when DOM is ready
-            document.addEventListener("DOMContentLoaded", async () => {
+            const initApp = async () => {
                 try {
                     console.log("🚀 DOM loaded, starting initialization...");
                     // Initialize theme manager (original code)
@@ -774,8 +774,18 @@ cat > "$DIST_DIR/index.html" << 'EOF'
                     `;
                     document.body.appendChild(errorDiv);
                 }
+            };
+
+            if (document.readyState === "loading") {
+                document.addEventListener("DOMContentLoaded", initApp);
+            } else {
+                initApp();
+            }
+
                     return { init, PaperProcessor, process_tar_archive };
                 } catch (moduleError) {
+                    document.body.classList.remove("loading");
+                    document.body.classList.add("error");
                     console.error('❌ Failed to load WASM module:', moduleError);
 
                     document.body.appendChild(Object.assign(document.createElement('div'), {
@@ -788,239 +798,9 @@ cat > "$DIST_DIR/index.html" << 'EOF'
             }
 
             // Main initialization function
-            async function initializeWasmApp() {
-                try {
-                    const { init, PaperProcessor, process_tar_archive } = await loadWasmNonModule();
-                    // Rest of the initialization stays the same but wrapped in the new structure
-                    const wasmPapersManager = new (class WasmPapersManager {
-                        constructor() {
-                            console.log('🏗️ Creating WasmPapersManager instance...');
-                            this.processor = null;
-                            this.papers = [];
-                            this.categories = [];
-                            this.filteredPapers = [];
-                            this.currentFilters = {
-                                search: '',
-                                category: '',
-                                status: '',
-                                sortOrder: 'title-asc'
-                            };
-                            console.log('✅ WasmPapersManager constructor complete');
-                        }
-
-                        async init() {
-                            console.log('🚀 Initializing WASM Papers Manager...');
-
-                            try {
-                                console.log('⚙️ Calling WASM init()...');
-                                await init();
-                                console.log('✅ WASM initialized');
-
-                                console.log('🏗️ Creating PaperProcessor...');
-                                this.processor = new PaperProcessor();
-                                console.log('✅ Processor created');
-
-                                console.log('📂 Loading sources...');
-                                await this.loadSources();
-
-                                console.log('🎨 Setting up UI...');
-                                this.setupEventListeners();
-                                this.populateCategories();
-                                this.renderPapers();
-
-                                console.log('✅ WASM Papers Manager initialized successfully');
-                            } catch (error) {
-                                console.error('❌ Failed to initialize WASM Papers Manager:', error);
-                                console.error('📍 Error stack:', error.stack);
-                                throw error;
-                            }
-                        }
-
-                        async loadSources() {
-                            try {
-                                console.log('📦 Fetching sources.tar...');
-                                const sourcesResponse = await fetch('./sources.tar');
-                                if (!sourcesResponse.ok) {
-                                    console.error(\`❌ Failed to fetch sources.tar: HTTP \${sourcesResponse.status}\`);
-                                    throw new Error(\`Failed to fetch sources.tar: \${sourcesResponse.status}\`);
-                                }
-                                console.log('📦 Converting sources.tar to array buffer...');
-                                const sourcesData = new Uint8Array(await sourcesResponse.arrayBuffer());
-                                console.log(\`✅ Loaded sources.tar (\${sourcesData.length} bytes)\`);
-
-                                console.log('📂 Processing tar archive...');
-                                const files = process_tar_archive(sourcesData);
-                                console.log(\`✅ Extracted \${files.length} files from archive\`);
-
-                                if (files.length === 0) {
-                                    console.warn('⚠️ No files found in tar archive');
-                                }
-
-                                console.log('📄 Processing individual papers...');
-                                for (let i = 0; i < files.length; i++) {
-                                    const file = files[i];
-                                    const filename = file.filename.replace('papers/', '');
-                                    const content = file.content;
-
-                                    console.log(\`📄 Processing file \${i + 1}/\${files.length}: \${filename}\`);
-                                    try {
-                                        this.processor.process_paper(filename, content);
-                                        console.log(\`✅ Processed \${filename}\`);
-                                    } catch (error) {
-                                        console.error(\`❌ Failed to process \${filename}:\`, error);
-                                        console.error('📍 Processing error stack:', error.stack);
-                                    }
-                                }
-
-                                console.log('📊 Getting processed data...');
-                                const papersJson = this.processor.get_papers_json();
-                                const categoriesJson = this.processor.get_categories_json();
-
-                                console.log(\`📊 Papers JSON length: \${papersJson.length} chars\`);
-                                console.log(\`📊 Categories JSON length: \${categoriesJson.length} chars\`);
-
-                                this.papers = JSON.parse(papersJson);
-                                this.categories = JSON.parse(categoriesJson);
-                                this.filteredPapers = [...this.papers];
-
-                                const paperCount = this.processor.get_paper_count();
-                                console.log(\`✅ Processed \${paperCount} papers total\`);
-                                console.log('📄 Paper titles:', this.papers.map(p => p.title));
-
-                            } catch (error) {
-                                console.error('❌ Failed to load sources:', error);
-                                console.error('📍 Error stack:', error.stack);
-                                throw error;
-                            }
-                        }
-
-                        // Add minimal UI methods (abbreviated for space)
-                        setupEventListeners() {
-                            // Basic event listeners for the interface
-                        }
-
-                        populateCategories() {
-                            // Populate category dropdown
-                        }
-
-                        renderPapers() {
-                            // Render papers to the page
-                            const paperList = document.getElementById('paper-list');
-                            if (paperList && this.papers.length > 0) {
-                                paperList.innerHTML = this.papers.map(paper => \`
-                                    <div class="paper-card">
-                                        <h3>\${paper.title}</h3>
-                                        <p>\${paper.summary}</p>
-                                        <span class="status \${paper.status}">\${paper.status}</span>
-                                    </div>
-                                \`).join('');
-                            }
-                        }
-                    })();
-
-                    // Store globally
-                    window.wasmPapersManager = wasmPapersManager;
-                    window.papersManager = wasmPapersManager;
-
-                    // Initialize when DOM is ready
-                    if (document.readyState === 'loading') {
-                        document.addEventListener('DOMContentLoaded', async () => {
-                            await startApp();
-                        });
-                    } else {
-                        await startApp();
-                    }
-
-                    async function startApp() {
-                        try {
-                            console.log("🚀 DOM loaded, starting initialization...");
-
-                            // Theme manager setup (simplified)
-                            const themeSelect = document.getElementById("theme-select");
-                            if (themeSelect) {
-                                const savedTheme = localStorage.getItem("selectedTheme") || "default";
-                                themeSelect.value = savedTheme;
-
-                                themeSelect.addEventListener("change", (e) => {
-                                    const theme = e.target.value;
-                                    const link = document.getElementById("theme-stylesheet");
-                                    if (link) {
-                                        link.href = \`dist/css/theme-\${theme}.css\`;
-                                        localStorage.setItem("selectedTheme", theme);
-                                    }
-                                });
-
-                                // Apply initial theme
-                                const link = document.getElementById("theme-stylesheet");
-                                if (link) {
-                                    link.href = \`dist/css/theme-\${savedTheme}.css\`;
-                                }
-                            }
-
-                            console.log('🚀 Initializing WASM papers manager...');
-                            await window.wasmPapersManager.init();
-                            console.log('✅ WASM papers manager initialized successfully');
-
-                            console.log('🎨 Removing loading state and showing content...');
-                            document.body.classList.remove("loading");
-                            document.body.classList.add("loaded");
-                            console.log('✅ Application fully initialized!');
-
-                        } catch (error) {
-                            console.error("❌ Failed to initialize application:", error);
-
-                            document.body.classList.remove("loading");
-                            document.body.classList.add("error");
-
-                            const errorDiv = document.createElement('div');
-                            errorDiv.style.cssText = \`
-                                position: fixed; top: 20px; left: 20px; right: 20px; z-index: 10000;
-                                color: #ff6b6b; background: rgba(255,0,0,0.1); padding: 20px;
-                                border: 1px solid #ff6b6b; border-radius: 5px; font-family: monospace;
-                            \`;
-                            errorDiv.innerHTML = \`
-                                <h2>🚨 Application Error</h2>
-                                <p><strong>Error:</strong> \${error.message}</p>
-                                <button onclick="location.reload();" style="margin-top: 10px; padding: 5px 10px; background: #ff6b6b; color: white; border: none; border-radius: 3px;">Reload Page</button>
-                            \`;
-                            document.body.appendChild(errorDiv);
-                        }
-                    }
-
-                } catch (moduleError) {
-                    console.error('❌ Failed to load WASM module:', moduleError);
-
-                    document.body.classList.remove("loading");
-                    document.body.classList.add("error");
-
-                    const errorDiv = document.createElement('div');
-                    errorDiv.style.cssText = \`
-                        position: fixed; top: 20px; left: 20px; right: 20px; z-index: 10000;
-                        color: #ff6b6b; background: rgba(255,0,0,0.1); padding: 20px;
-                        border: 1px solid #ff6b6b; border-radius: 5px; font-family: monospace;
-                    \`;
-                    errorDiv.innerHTML = \`
-                        <h2>🚨 WASM Module Loading Error</h2>
-                        <p><strong>Failed to load WASM module:</strong> \${moduleError.message}</p>
-                        <p><strong>This usually means:</strong></p>
-                        <ul>
-                            <li>Cloudflare Rocket Loader interference</li>
-                            <li>ES6 module import failed</li>
-                            <li>WASM files are not accessible</li>
-                            <li>Browser compatibility issues</li>
-                        </ul>
-                        <p><strong>Try:</strong></p>
-                        <ul>
-                            <li><a href="./fallback-test.html" style="color: #58a6ff;">🔧 Fallback Test Page</a></li>
-                        </ul>
-                        <button onclick="location.reload();" style="margin-top: 10px; padding: 5px 10px; background: #ff6b6b; color: white; border: none; border-radius: 3px;">Reload Page</button>
-                    \`;
-                    document.body.appendChild(errorDiv);
-                }
-            }
 
             // Start the initialization
-            initializeWasmApp();
+            loadWasmNonModule();
         </script>
     </body>
 </html>
